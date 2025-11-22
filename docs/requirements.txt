@@ -1,3 +1,5 @@
 Ubuntu 22.04 LTS
 build-essential
 linux-headers
+qemu
+OpenSBI

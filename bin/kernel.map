@@ -2,7 +2,7 @@
                0                0 80200000     1 . = 0x80200000
         80200000                0        0     1 __kernel_base = .
         80200000         80200000       ae     2 .text
-        80200000         80200000        e     2         /tmp/boot-1b4c96.o:(.text.boot)
+        80200000         80200000        e     2         /tmp/boot-0dd10d.o:(.text.boot)
         80200000         80200000        0     1                 
         80200000         80200000        0     1                 
         80200000         80200000        0     1                 .Lpcrel_hi0
@@ -11,8 +11,8 @@
         80200000         80200000        e     1                 boot
         8020000e         8020000e        0     1                 
         8020000e         8020000e        0     1                 
-        8020000e         8020000e        0     2         /tmp/boot-1b4c96.o:(.text)
-        8020000e         8020000e       a0     2         /tmp/kernel-69faf1.o:(.text)
+        8020000e         8020000e        0     2         /tmp/boot-0dd10d.o:(.text)
+        8020000e         8020000e       a0     2         /tmp/kernel-022f56.o:(.text)
         8020000e         8020000e        0     1                 
         8020000e         8020000e        0     1                 
         8020000e         8020000e        0     1                 $x.0
@@ -107,14 +107,14 @@
         84221000         84221000  2000000     1 . += 32 * 1024 * 1024
         86221000         86221000        0     1 __heap_end = .
                0                0      120     1 .debug_abbrev
-               0                0       2c     1         /tmp/boot-1b4c96.o:(.debug_abbrev)
+               0                0       2c     1         /tmp/boot-0dd10d.o:(.debug_abbrev)
                0                0        0     1                 $d.1
-              2c               2c       f4     1         /tmp/kernel-69faf1.o:(.debug_abbrev)
+              2c               2c       f4     1         /tmp/kernel-022f56.o:(.debug_abbrev)
               2c               2c        0     1                 $d.3
                0                0      1fe     1 .debug_info
-               0                0       40     1         /tmp/boot-1b4c96.o:(.debug_info)
+               0                0       40     1         /tmp/boot-0dd10d.o:(.debug_info)
                0                0        0     1                 $d.2
-              40               40      1be     1         /tmp/kernel-69faf1.o:(.debug_info)
+              40               40      1be     1         /tmp/kernel-022f56.o:(.debug_info)
               40               40        0     1                 $d.4
                0                0       be     1 .debug_str
                0                0       be     1         <internal>:(.debug_str)
@@ -123,25 +123,25 @@
                0                0       2b     1 .riscv.attributes
                0                0       2b     1         <internal>:(.riscv.attributes)
                0                0       90     8 .debug_frame
-               0                0       30     8         /tmp/boot-1b4c96.o:(.debug_frame)
+               0                0       30     8         /tmp/boot-0dd10d.o:(.debug_frame)
                0                0        0     1                 
                0                0        0     1                 $d.6
-              30               30       60     8         /tmp/kernel-69faf1.o:(.debug_frame)
+              30               30       60     8         /tmp/kernel-022f56.o:(.debug_frame)
               30               30        0     1                 
               30               30        0     1                 $d.9
                0                0      1b0     1 .debug_line
-               0                0       42     1         /tmp/boot-1b4c96.o:(.debug_line)
+               0                0       42     1         /tmp/boot-0dd10d.o:(.debug_line)
                0                0        0     1                 .Lline_table_start0
                0                0        0     1                 $d.7
-              42               42      16e     1         /tmp/kernel-69faf1.o:(.debug_line)
+              42               42      16e     1         /tmp/kernel-022f56.o:(.debug_line)
               42               42        0     1                 .Lline_table_start0
               42               42        0     1                 $d.10
                0                0       36     1 .debug_loc
-               0                0       36     1         /tmp/kernel-69faf1.o:(.debug_loc)
+               0                0       36     1         /tmp/kernel-022f56.o:(.debug_loc)
                0                0        0     1                 
                0                0        0     1                 $d.2
                0                0       60     1 .debug_ranges
-               0                0       60     1         /tmp/kernel-69faf1.o:(.debug_ranges)
+               0                0       60     1         /tmp/kernel-022f56.o:(.debug_ranges)
                0                0        0     1                 
                0                0        0     1                 $d.5
               30               30        0     1                 
