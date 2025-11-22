@@ -1,26 +1,16 @@
 #include "kernel.h"
+#include "uart.h"
+#include "test.h"
 
-#define UART0_BASE 0x10000000UL
-#define UART0_THR (*(volatile unsigned char *)(UART0_BASE + 0x00))
-#define UART0_LSR (*(volatile unsigned char *)(UART0_BASE + 0x05))
+void kernel_main()
+{
+    // clear screen, welcome message
+    uart_cls();
+    uart_printf("Novix RISC-V 64 OS, (c) NovixManiac, Version 0.0.1\n\n");
+    uart_puts("Booting ...\n");
 
-static inline int uart_is_writable() {
-    return UART0_LSR & 0x20;
-}
+    // test getc
+    getc_test();
 
-void putc(char c) {
-    while (!uart_is_writable());
-    UART0_THR = c;
-}
-
-void puts(const char *s) {
-    while (*s) {
-        if (*s == '\n') putc('\r');
-            putc(*s++);
-    }
-}
-
-void kernel_main() {
-    puts("hello world!\n");
     for (;;);
 }

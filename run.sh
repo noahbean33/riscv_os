@@ -13,12 +13,17 @@ rm -f bin/kernel.elf bin/kernel.map
 echo "=== Build kernel ==="
 $CC $CFLAGS -Wl,-Tkernel.ld -Wl,-Map=bin/kernel.map -o bin/kernel.elf \
     boot/boot.c \
-    kernel/kernel.c
-
+    kernel/kernel.c \
+    kernel/string.c \
+    kernel/common.c \
+    kernel/sbi.c \
+    kernel/uart.c \
+    kernel/test.c
+    
 echo "=== Start QEMU ==="
 $QEMU -machine virt \
       -m 512M \
       -nographic \
-      -bios default \
+      -bios sbi/opensbi-riscv64-generic-fw_dynamic.bin \
       -kernel bin/kernel.elf \
       --no-reboot
