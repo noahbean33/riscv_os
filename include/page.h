@@ -88,3 +88,5 @@ void paging_init(void);
 paddr_t alloc_pages(uint64_t n);
 void map_page(pagetable_t root_table, uint64_t va, uint64_t pa, uint64_t flags, int debug_flag);
 void set_active_pagetable(uintptr_t new_pagetable);
+
+void map_mmio_range(pagetable_t pt, uint64_t pa_start, uint64_t va_start, uint64_t len, uint64_t perm);

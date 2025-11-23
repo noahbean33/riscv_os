@@ -1,6 +1,7 @@
 #include "uart.h"
 #include "heap.h"
 #include "time.h"
+#include "debug.h"
 
 void heap_test(void){
     // heap test
@@ -32,4 +33,15 @@ void date_time_test(void){
     struct DateTime dt;
     compute_datetime(ticks, &dt);
     print_datetime(&dt);
+}
+
+void log_test(void){
+
+    LOG_INFO("init: PID=%d, status=%s, hex=0x%x", 5, "running", 0xdeadbeef);
+    LOG_WARN("init: PID=%d, status=%s, hex=0x%x", 5, "running", 0xdeadbeef);
+    LOG_ERR("init: PID=%d, status=%s, hex=0x%x", 5, "running", 0xdeadbeef);
+    LOG_DEBUG("init: PID=%d, status=%s, hex=0x%x", 5, "running", 0xdeadbeef);
+
+    LOG_DEBUG("kernel: gestart");
+    LOG_DEBUG("number=%d, hex=0x%x", 123, 0xbeef);
 }

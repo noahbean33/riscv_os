@@ -9,6 +9,9 @@
 #include "types.h"  
 #include "page.h"
 #include "tar-parser.h"
+#include "virtio.h"
+#include "debug.h"
+
 
 pagetable_t kernel_pagetable;
 
@@ -35,6 +38,11 @@ void kernel_main(void) {
 
      // testing date & time
     date_time_test();
+
+    // initialzie virtio
+    virtio_bus_init_scan();
+
+    log_test();
     
     // load idle process
     size_t fs;

@@ -6,6 +6,7 @@
 #include "heap.h"
 #include "uart.h"
 #include "riscv.h"
+#include "virtio-mmio.h"
 
 
 extern pagetable_t kernel_pagetable;
@@ -18,12 +19,19 @@ void paging_init(void) {
     paddr_t pt_page = alloc_pages(1);
 
     kernel_pagetable = (pagetable_t)pt_page;
-    
+
     for (paddr_t pa = (paddr_t)__kernel_base; pa < (paddr_t)__heap_end; pa += PAGE_SIZE) {
         map_page(kernel_pagetable, pa, pa, PTE_V|PTE_R|PTE_W|PTE_X, 0);
     }
 
-    // sswitch immediately to this page table
+     // map MMIO voor virtio-emerg debugging
+    map_mmio_range(kernel_pagetable, 
+        VIRTIO_MMIO_BASE, 
+        VIRTIO_MMIO_BASE, 
+        VIRTIO_MMIO_SIZE * VIRTIO_MMIO_MAX_DEVICES,
+         PTE_V | PTE_R | PTE_W);
+
+    // switch immediately to this page table
     set_active_pagetable((uintptr_t)kernel_pagetable);
 
     uart_printf("[paging_init] kernel page table initialized at : 0x%lx\n",
@@ -114,4 +122,14 @@ void set_active_pagetable(uintptr_t new_pagetable) {
     sfence_vma();
     WRITE_CSR(satp, MAKE_SATP(new_pagetable));
     sfence_vma();
+}
+
+void map_mmio_range(pagetable_t pt, uint64_t pa_start, uint64_t va_start, uint64_t len, uint64_t perm) {
+    for (uint64_t offset = 0; offset < len; offset += PAGE_SIZE) {
+        map_page(pt,
+                 va_start + offset,
+                 pa_start + offset,
+                 perm,
+                 0);
+    }
 }

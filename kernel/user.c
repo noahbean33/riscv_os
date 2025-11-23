@@ -1,0 +1,31 @@
+#include "user.h"
+#include "riscv.h"
+#include "page.h"
+#include "virtio-emerg.h"
+
+extern pagetable_t kernel_pagetable;
+
+void log_user(user_log_level_t level, const char *fmt, ...) {
+    uintptr_t old_satp = switch_pagetable((uintptr_t)kernel_pagetable);
+
+    va_list args;
+    va_start(args, fmt);
+
+    switch (level) {
+        case LOG_LVL_INFO:
+            virtio_emerg_log_va("INFO", NULL, fmt, args);
+            break;
+        case LOG_LVL_WARN:
+            virtio_emerg_log_va("WARN", NULL, fmt, args);
+            break;
+        case LOG_LVL_ERR:
+            virtio_emerg_log_va("ERR", NULL, fmt, args);
+            break;
+        case LOG_LVL_DBG:
+            virtio_emerg_log_va("DBG", NULL, fmt, args);
+            break;
+    }
+
+    va_end(args);
+    restore_pagetable(old_satp);
+}

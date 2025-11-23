@@ -1,0 +1,6 @@
+[INFO] init: PID=5, status=running, hex=0xdeadbeef
+[WARN] init: PID=5, status=running, hex=0xdeadbeef
+[ERR] init: PID=5, status=running, hex=0xdeadbeef
+[DBG] init: PID=5, status=running, hex=0xdeadbeef
+[DBG] kernel: gestart
+[DBG] number=123, hex=0xbeef
