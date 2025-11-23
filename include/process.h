@@ -64,3 +64,6 @@ proc_t *alloc_free_proc(void);
 void strip_elf_extension(const char *progname, char *out_name, size_t maxlen);
 
 
+void dump_pcb(proc_t *p);
+void print_process_table(void);
+const char* proc_state_str(int state);

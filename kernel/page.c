@@ -133,3 +133,57 @@ void map_mmio_range(pagetable_t pt, uint64_t pa_start, uint64_t va_start, uint64
                  0);
     }
 }
+
+pte_t* walk(pagetable_t pagetable, uint64_t va, int alloc) {
+    if (va >= MAXVA)
+        PANIC("walk: virtual address too high");
+
+    for (int level = 2; level > 0; level--) {
+        int idx = PX(level, va);
+        pte_t *pte = &pagetable[idx];
+        if (*pte & PTE_V) {
+            pagetable = (pagetable_t)PA2KA(PTE2PA(*pte));
+        } else {
+            if (!alloc)
+                return 0;
+            // allocating a new page table
+            paddr_t new = alloc_pages(1);
+            memset(PA2KA(new), 0, PAGE_SIZE);
+            *pte = ((new >> 12) << 10) | PTE_V;
+            pagetable = (pagetable_t)PA2KA(new);
+        }
+    }
+
+    return &pagetable[PX(0, va)];
+}
+
+
+// Find the physical address associated with a virtual user address
+paddr_t walkaddr(pagetable_t pagetable, vaddr_t va) {
+    if (va >= (vaddr_t)__kernel_base) {
+        uart_printf("[walkaddr] reject VA=0x%lx: in kernel space\n", va);
+        return 0; // Only user addresses allowed
+    }
+
+    pte_t *pte = walk(pagetable, va, 0);
+    if (pte == 0) {
+        uart_printf("[walkaddr] VA=0x%lx: walk() returned NULL\n", va);
+        return 0;
+    }
+
+    if (!(*pte & PTE_V)) {
+        uart_printf("[walkaddr] VA=0x%lx: PTE not valid (pte=0x%lx)\n", va, *pte);
+        return 0;
+    }
+
+    if (!(*pte & (PTE_R | PTE_W | PTE_X))) {
+        uart_printf("[walkaddr] VA=0x%lx: no RWX permissions (pte=0x%lx)\n", va, *pte);
+        return 0;
+    }
+
+    paddr_t pa = PTE2PA(*pte);
+    paddr_t final = pa + (va & 0xFFF);
+
+   // uart_printf("[walkaddr] VA=0x%lx -> PA=0x%lx (pte=0x%lx)\n", va, final, *pte);
+    return final;
+}

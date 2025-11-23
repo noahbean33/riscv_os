@@ -1,15 +1,54 @@
 [INFO] [tarfs] found: idle.elf
-[DBG] [create_init_process] p->tf is at 0x80229a68
+[DBG] [create_init_process] p->tf is at 0x8024d898
 [DBG] [create_init_process] p->tf->epc = 0x1000000
-[DBG] [create_init_process] p->tf->ra = 0x80202fc8
+[DBG] [create_init_process] p->tf->ra = 0x802032ca
 [DBG] [create_init_process] p->tf->sp is at 0x1020000
-[INFO] [create_init_process] created user pagetable at : 0x802ae000
+[INFO] [create_init_process] created user pagetable at : 0x802d1000
 [INFO] [create_init_process] mapping elf started...
 [INFO] [create_init_process] mapping elf done!
 [DBG] [create_init_process] stack_bottom aligned? Yes
 [DBG] [create_init_process] stack_top    aligned? Yes
 [INFO] [create_init_process] mapping userstack top = 0x1020000, bottom = 0x1010000
 [INFO] [create_init_process] User stack: 0x1010000 - 0x1020000 (65536 bytes)
-[INFO] [create_init_process] Heap : 0x80304000
-[INFO] [create_init_process] Process pointer created : 0x0x80227b18
+[INFO] [create_init_process] Heap : 0x80327000
+[INFO] [create_init_process] Process pointer created : 0x0x8024b948
 [INFO] [kernel_main] idle.elf loaded.
+[INFO] [tarfs] found: idle.elf
+[INFO] [tarfs] found: shell.elf
+[DBG] [create_init_process] p->tf is at 0x8024f948
+[DBG] [create_init_process] p->tf->epc = 0x1000000
+[DBG] [create_init_process] p->tf->ra = 0x802032ca
+[DBG] [create_init_process] p->tf->sp is at 0x1020000
+[INFO] [create_init_process] created user pagetable at : 0x80349000
+[INFO] [create_init_process] mapping elf started...
+[INFO] [create_init_process] mapping elf done!
+[DBG] [create_init_process] stack_bottom aligned? Yes
+[DBG] [create_init_process] stack_top    aligned? Yes
+[INFO] [create_init_process] mapping userstack top = 0x1020000, bottom = 0x1010000
+[INFO] [create_init_process] User stack: 0x1010000 - 0x1020000 (65536 bytes)
+[INFO] [create_init_process] Heap : 0x8039f000
+[INFO] [create_init_process] Process pointer created : 0x0x8024d9f8
+[INFO] [kernel_main] shell.elf loaded.
+[INFO] Start scheduler ...
+[INFO] [yield] <<<<< YIELD >>>>>
+[INFO] [process list]
+[INFO] PID=0  State=RUNNABLE  EPC=0x1000000  SP=0x1020000, name=idle
+[INFO] PID=2  State=RUNNABLE  EPC=0x1000000  SP=0x1020000, name=shell
+[DBG] === TrapFrame Debug Dump ===
+[DBG]  frame@0x8024d898  sp=0x1020000  epc=0x1000000
+[DBG]  ra=0x802032ca gp=0x0 tp=0x0
+[DBG]  t0=0x0 t1=0x0 t2=0x0 t3=0x0 t4=0x0 t5=0x0 t6=0x0
+[DBG]  a0=0x0 a1=0x0 a2=0x0 a3=0x0 a4=0x0 a5=0x0 a6=0x0 a7=0x0
+[DBG]  s0=0x0 s1=0x0 s2=0x0 s3=0x0 s4=0x0 s5=0x0 s6=0x0 s7=0x0
+[DBG]  s8=0x0 s9=0x0 s10=0x0 s11=0x0
+[DBG] ============================
+[INFO] [scheduler] switching to pid=2 tf@0x8024f948 sp=0x1020000 epc=0x1000000
+[INFO] [scheduler] <<< SWITCH CONTEXT SP >>>
+[DBG] === TrapFrame Debug Dump ===
+[DBG]  frame@0x8024f948  sp=0x1020000  epc=0x1000000
+[DBG]  ra=0x802032ca gp=0x0 tp=0x0
+[DBG]  t0=0x0 t1=0x0 t2=0x0 t3=0x0 t4=0x0 t5=0x0 t6=0x0
+[DBG]  a0=0x0 a1=0x0 a2=0x0 a3=0x0 a4=0x0 a5=0x0 a6=0x0 a7=0x0
+[DBG]  s0=0x0 s1=0x0 s2=0x0 s3=0x0 s4=0x0 s5=0x0 s6=0x0 s7=0x0
+[DBG]  s8=0x0 s9=0x0 s10=0x0 s11=0x0
+[DBG] ============================

@@ -14,6 +14,8 @@
 #include "process.h"
 #include "elf-loader.h"
 #include "string.h"
+#include "scheduler.h"
+#include "util.h"
 
 pagetable_t kernel_pagetable;
 
@@ -63,5 +65,22 @@ void kernel_main(void) {
     current_proc = idle_proc;
     LOG_INFO("[kernel_main] idle.elf loaded.");
 
-    for(;;);
+    // load shell process
+    void *shell_file = tarfs_lookup("shell.elf", &fs, 1);
+    if (!shell_file) {
+        PANIC("[kernel_main] shell.elf not found!\n");
+    }
+
+    // create shell process
+    struct process *s = extract_flat_binary_from_elf(shell_file, CREATE_PROCESS);
+    strcpy(s->name, "shell");
+    LOG_INFO("[kernel_main] shell.elf loaded.");
+
+    // start scheduler
+    LOG_INFO("Start scheduler ...");
+    while(1) {
+        yield();
+    }
+
+    system_halt();      // Should never be reached, so just to be safe
 }

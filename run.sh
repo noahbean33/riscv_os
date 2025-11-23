@@ -31,6 +31,7 @@ $CC $CFLAGS -c user/lib/init_crt0.S -o user/bin/init_crt0.o
 echo "Compile user programs ..."
 $CC $CFLAGS -c user/idle.c -o user/bin/idle.o
 $CC $CFLAGS -c user/lib/exit.c -o user/bin/exit.o
+$CC $CFLAGS -c user/shell.c -o user/bin/shell.o
 
 # === Build static userlib ===
 echo "Build static userlib ..."
@@ -41,10 +42,13 @@ echo "Link user programs ..."
 $CC $CFLAGS $LDFLAGS -Wl,-Map=user/idle.map -o user/idle.elf \
      user/bin/init_crt0.o user/bin/idle.o user/lib/libuser.a
 
+$CC $CFLAGS $LDFLAGS -Wl,-Map=user/shell.map -o user/shell.elf \
+     user/bin/init_crt0.o user/bin/shell.o user/lib/libuser.a
+
 # === Create tarball for initramfs ===
 echo "=== Create tarball for initramfs ==="
 (cd user && tar cf "../$INITRAMFS_DIR/initramfs.tar" \
-  idle.elf)
+  idle.elf shell.elf)
 
 $OBJCOPY -I binary -O elf64-littleriscv --rename-section .data=.initramfs_payload \
   "$INITRAMFS_DIR/initramfs.tar" "$INITRAMFS_DIR/initramfs.o"
@@ -74,6 +78,9 @@ $CC $CFLAGS -Wl,-Tkernel.ld -Wl,-Map=bin/kernel.map -o bin/kernel.elf \
     kernel/user.c \
     kernel/process.c \
     kernel/elf-loader.c \
+    kernel/util.c \
+    kernel/context.c \
+    kernel/scheduler.c \
     "$INITRAMFS_DIR/initramfs.o"
 
 # === Start socket communicatie ===

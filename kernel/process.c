@@ -154,3 +154,52 @@ struct process *create_init_process(const void *flat_image, size_t image_size, i
     return p;
 }
 
+void dump_pcb(proc_t *p) {
+    LOG_USER_DBG("=== PCB Dump: PID %d ===", p->pid);
+    LOG_USER_DBG("State           : %s", p->state == PROC_RUNNABLE ? "RUNNABLE" : "UNUSED");
+    LOG_USER_DBG("SP (kernel)     : 0x%x", (uint64_t)p->sp);
+    LOG_USER_DBG("Heap end        : 0x%x", (uint64_t)p->heap_end);
+    LOG_USER_DBG("Page table      : 0x%x", (uint64_t)p->page_table);
+    LOG_USER_DBG("Entry point     : 0x%x", p->entry_point);
+    LOG_USER_DBG("User stack top  : 0x%x", p->user_stack_top);
+
+    if (p->tf) {
+        dump_trap_frame(p->tf);
+    } else {
+        LOG_USER_ERR("([dump_pcb] trap frame is NULL)");
+    }
+
+    LOG_USER_DBG("=========================");
+}
+
+void print_process_table(void) {
+    LOG_USER_INFO("[process list]");
+    for (int i = 0; i < PROCS_MAX; i++) {
+        struct process *p = &procs[i];
+
+        const char *state = "???";
+        switch (p->state) {
+            case PROC_UNUSED:    state = "UNUSED  ";  break;
+            case PROC_RUNNABLE:  state = "RUNNABLE";  break;
+            case PROC_RUNNING:   state = "RUNNING ";  break;
+            case PROC_WAITING:   state = "WAITING ";  break;
+            case PROC_ZOMBIE:    state = "ZOMBIE  ";  break;
+        }
+
+        if (p->state != PROC_UNUSED) {
+            LOG_USER_INFO("PID=%d  State=%s  EPC=0x%x  SP=0x%x, name=%s",
+                p->pid, state, p->tf ? p->tf->epc : 0, p->tf ? p->tf->sp : 0, p->name);
+        }
+    }
+}
+
+const char* proc_state_str(int state) {
+    switch (state) {
+        case PROC_UNUSED:   return "UNUSED  ";
+        case PROC_RUNNABLE: return "RUNNABLE";
+        case PROC_RUNNING:  return "RUNNING ";
+        case PROC_WAITING:  return "WAITING ";
+        case PROC_ZOMBIE:   return "ZOMBIE  ";
+        default:            return "UNKNOWN ";
+    }
+}
