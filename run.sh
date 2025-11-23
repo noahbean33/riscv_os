@@ -49,6 +49,8 @@ echo "=== Create tarball for initramfs ==="
 $OBJCOPY -I binary -O elf64-littleriscv --rename-section .data=.initramfs_payload \
   "$INITRAMFS_DIR/initramfs.tar" "$INITRAMFS_DIR/initramfs.o"
 
+./scripts/gen_buildtime_header.sh
+
 # === Build kernel ===
 echo "=== Build kernel ==="
 $CC $CFLAGS -Wl,-Tkernel.ld -Wl,-Map=bin/kernel.map -o bin/kernel.elf \
@@ -66,7 +68,15 @@ $CC $CFLAGS -Wl,-Tkernel.ld -Wl,-Map=bin/kernel.map -o bin/kernel.elf \
     kernel/heap.c \
     kernel/page.c \
     kernel/tar-parser.c \
+    kernel/time.c \
     "$INITRAMFS_DIR/initramfs.o"
+
+# === Start socket communicatie ===
+SOCK=/tmp/hosttime.sock
+TIME=$(date +%s)
+[ -S "$SOCK" ] && rm "$SOCK"
+( echo "$TIME" | socat -d -d - UNIX-LISTEN:"$SOCK",fork ) &
+sleep 0.2
     
 # === Start QEMU ===
 echo "=== Start QEMU ==="
@@ -75,4 +85,5 @@ $QEMU -machine virt \
       -nographic \
       -bios sbi/opensbi-riscv64-generic-fw_dynamic.bin \
       -kernel bin/kernel.elf \
+      -chardev socket,id=hosttime,path="$SOCK",server=on,wait=off \
       --no-reboot
