@@ -1,0 +1,28 @@
+{
+   "version": "2.0.0",
+  "tasks": [
+        {
+          "label": "Run QEMU",
+          "type": "shell",
+          "command": "echo 'QEMU started'; qemu-system-riscv64 -machine virt -m 512M -nographic -bios sbi/opensbi-riscv64-generic-fw_dynamic.bin -kernel bin/kernel.elf --no-reboot -S -s",
+          "isBackground": true,
+          "problemMatcher": [
+            {
+              "pattern": [
+                {
+                  "regexp": ".",
+                  "file": 1,
+                  "location": 2,
+                  "message": 3
+                }
+              ],
+              "background": {
+                "activeOnStart": true,
+                "beginsPattern": ".",
+                "endsPattern": "QEMU started"
+              }
+            }
+          ]
+        }
+    ]
+}

@@ -1,0 +1,89 @@
+             VMA              LMA     Size Align Out     In      Symbol
+               0                0  1000000     1 . = 0x1000000
+         1000000          1000000       18     2 .text
+         1000000          1000000       10     1         user/bin/init_crt0.o:(.text.start)
+         1000000          1000000        0     1                 
+         1000000          1000000        0     1                 .Lpcrel_hi0
+         1000000          1000000        0     1                 $x.0
+         1000000          1000000        0     1                 
+         1000000          1000000        0     1                 start
+         1000008          1000008        0     1                 
+         100000c          100000c        0     1                 
+         1000010          1000010        0     1                 
+         1000010          1000010        0     2         user/bin/init_crt0.o:(.text)
+         1000010          1000010        6     2         user/bin/idle.o:(.text)
+         1000010          1000010        0     1                 
+         1000010          1000010        0     1                 
+         1000010          1000010        0     1                 .LBB0_1
+         1000010          1000010        0     1                 $x.0
+         1000010          1000010        0     1                 
+         1000010          1000010        6     1                 main
+         1000014          1000014        0     1                 
+         1000016          1000016        0     1                 
+         1000016          1000016        0     1                 
+         1000016          1000016        2     2         user/lib/libuser.a(exit.o):(.text)
+         1000016          1000016        0     1                 
+         1000016          1000016        0     1                 
+         1000016          1000016        0     1                 .LBB0_1
+         1000016          1000016        0     1                 $x.0
+         1000016          1000016        0     1                 
+         1000016          1000016        2     1                 exit
+         1000018          1000018        0     1                 
+         1000018          1000018        0     1                 
+         1000018          1000018        0     4 .bss
+         1000018          1000018        0     1         
+         1000018          1000018     ffe8     1 . = 0x1010000
+         1010000          1010000    10000     1 .stack
+         1010000          1010000        0     1         __user_stack_bottom = .
+         1010000          1010000    10000     1         . += 64 * 1024
+         1020000          1020000        0     1         __user_stack_top = .
+         1020000          1020000        0     1 . = ALIGN ( 4096 )
+         1020000          1020000        0     1 __user_heap_start = 0x03000000
+         1020000          1020000  2000000     1 . += 32 * 1024 * 1024
+         3020000          3020000        0     1 __user_heap_end = .
+               0                0      116     1 .debug_info
+               0                0       96     1         user/bin/init_crt0.o:(.debug_info)
+               0                0        0     1                 
+               0                0        0     1                 $d.4
+              96               96       40     1         user/bin/idle.o:(.debug_info)
+              96               96        0     1                 $d.2
+              d6               d6       40     1         user/lib/libuser.a(exit.o):(.debug_info)
+              d6               d6        0     1                 $d.2
+               0                0       7a     1 .debug_abbrev
+               0                0       21     1         user/bin/init_crt0.o:(.debug_abbrev)
+               0                0        0     1                 
+               0                0        0     1                 $d.3
+              21               21       2a     1         user/bin/idle.o:(.debug_abbrev)
+              21               21        0     1                 $d.1
+              4b               4b       2f     1         user/lib/libuser.a(exit.o):(.debug_abbrev)
+              4b               4b        0     1                 $d.1
+               0                0       30     1 .debug_aranges
+               0                0       30     1         user/bin/init_crt0.o:(.debug_aranges)
+               0                0        0     1                 $d.2
+               0                0       e4     1 .debug_line
+               0                0       54     1         user/bin/init_crt0.o:(.debug_line)
+               0                0        0     1                 .Lline_table_start0
+               0                0        0     1                 $d.5
+              54               54       4a     1         user/bin/idle.o:(.debug_line)
+              54               54        0     1                 .Lline_table_start0
+              54               54        0     1                 $d.7
+              9e               9e       46     1         user/lib/libuser.a(exit.o):(.debug_line)
+              9e               9e        0     1                 .Lline_table_start0
+              9e               9e        0     1                 $d.7
+               0                0       6d     1 .debug_str
+               0                0       6d     1         <internal>:(.debug_str)
+               0                0       42     1 .comment
+               0                0       42     1         <internal>:(.comment)
+               0                0       60     8 .debug_frame
+               0                0       30     8         user/bin/idle.o:(.debug_frame)
+               0                0        0     1                 
+               0                0        0     1                 $d.6
+              30               30       30     8         user/lib/libuser.a(exit.o):(.debug_frame)
+              30               30        0     1                 
+              30               30        0     1                 $d.6
+               0                0      5a0     8 .symtab
+               0                0      5a0     8         <internal>:(.symtab)
+               0                0       83     1 .shstrtab
+               0                0       83     1         <internal>:(.shstrtab)
+               0                0       d4     1 .strtab
+               0                0       d4     1         <internal>:(.strtab)
