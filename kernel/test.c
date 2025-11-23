@@ -1,4 +1,23 @@
 #include "uart.h"
+#include "heap.h"
+
+void heap_test(void)
+{
+    // heap test
+    uart_printf("Heap Test :\n");
+
+    void *a = malloc(64);
+    void *b = malloc(128);
+
+    uart_printf("a = %p\n", a);
+    uart_printf("b = %p\n", b);
+
+    free(a);
+    uart_printf("a = free\n");
+
+    void *c = malloc(32);
+    uart_printf("c = %p\n", c);
+}
 
 void getc_test(void)
 {

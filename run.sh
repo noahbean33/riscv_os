@@ -19,7 +19,11 @@ $CC $CFLAGS -Wl,-Tkernel.ld -Wl,-Map=bin/kernel.map -o bin/kernel.elf \
     kernel/sbi.c \
     kernel/uart.c \
     kernel/test.c \
-    kernel/trap.c
+    kernel/trap.c \
+    kernel/bss.c \
+    kernel/stack.c \
+    kernel/ram.c \
+    kernel/heap.c
     
 echo "=== Start QEMU ==="
 $QEMU -machine virt \
