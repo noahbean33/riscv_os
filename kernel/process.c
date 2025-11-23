@@ -1,0 +1,156 @@
+#include "process.h"
+#include "kernel.h"
+#include "memlayout.h"
+#include "string.h"
+#include "page.h"
+#include "trap.h"
+#include "heap.h"
+#include "user.h"
+#include "debug.h"
+
+extern struct process *current_proc;    // Currently running process
+extern int process_count;               // Number of processes
+struct process procs[PROCS_MAX];        // All process control structures.
+extern uint64_t g_free_pages;
+
+proc_t *get_proc_by_pid(int pid) {
+    if (pid <= 0 || pid > PROCS_MAX) return NULL;
+    return &procs[pid - 1];
+}
+
+proc_t *alloc_free_proc(void) {
+    for (int i = 0; i < PROCS_MAX; i++) {
+        if (procs[i].state == PROC_UNUSED) {
+            proc_t *p = &procs[i];
+            memset(p, 0, sizeof(proc_t));  // reset all fields
+            p->pid = i + 1;                // simple PID: index + 1
+            return p;
+        }
+    }
+    return NULL;
+}
+
+void strip_elf_extension(const char *progname, char *out_name, size_t maxlen) {
+   // uart_printf("strip_elf_extension: progname= %s\n", progname);
+    if (!progname || !out_name || maxlen == 0) return;
+
+    strncpy(out_name, progname, maxlen - 1);
+    out_name[maxlen - 1] = '\0';        //  null-terminated
+
+    char *dot = strstr(out_name, ".elf");
+    if (dot && strcmp(dot, ".elf") == 0) {
+        *dot = '\0';                    // truncate at ".elf"
+    }
+   // uart_printf("strip_elf_extension: outname= %s\n", out_name);
+}
+
+struct process *create_init_process(const void *flat_image, size_t image_size, int debug_flag) {
+    // 1) Find a free PCB
+    struct process *p = NULL;
+    for (int i = 0; i < PROCS_MAX; i++)
+        if (procs[i].state == PROC_UNUSED) { 
+            p = &procs[i]; 
+            break; 
+        }
+    if (!p) PANIC("[create_init_process] No free PCB");
+
+    // 1a) Keep track of number of process
+    process_count += 1;
+
+    // 2) Kernel stack prepare for 'trapframe'
+    uint64_t *tf_ksp = (uint64_t*)&p->tf_stack[sizeof p->tf_stack];
+
+    // Reserve space for trap_frame on the stack (for example, at the bottom)
+    // trap_frame_t is a struct of (for example) 31 * 8 bytes (adapt to your trap_frame definition)
+    tf_ksp -= sizeof(trap_frame_t) / sizeof(uint64_t);
+    trap_frame_t *tf = (trap_frame_t *)tf_ksp;
+    p->tf = tf;
+
+    // 2a) Init trapframe
+    memset(p->tf, 0, sizeof(trap_frame_t));
+    p->tf->sp  = g_user_stack_top;              // user stack pointer
+    p->tf->regs.ra  = (uint64_t)user_entry;     // ra = user_entry
+    p->tf->epc = (uint64_t)USER_BASE;           // epc
+    p->sp = (uint64_t)tf_ksp;                   // sp
+   
+    if (current_proc != NULL) 
+    {
+        p->parent = current_proc;
+        p->parent_pid = current_proc->pid;
+    }
+
+    if (debug_flag) {
+        LOG_DEBUG("[create_init_process] p->tf is at %p", p->tf);
+        LOG_DEBUG("[create_init_process] p->tf->epc = %p", (void*)p->tf->epc);
+        LOG_DEBUG("[create_init_process] p->tf->ra = %p", (void*)p->tf->regs.ra);
+        LOG_DEBUG("[create_init_process] p->tf->sp is at %p", p->tf->sp);
+    }
+
+    // 3) Build your *own* user PT
+    pagetable_t pt = (pagetable_t)alloc_pages(1);
+    p->page_table = pt;
+    LOG_INFO("[create_init_process] created user pagetable at : 0x%x", pt);
+
+    // 3a) Identity map does include the complete kernel area
+    for (paddr_t pa = (paddr_t)__kernel_base;
+         pa < (paddr_t)__free_ram_end;
+         pa += PAGE_SIZE) {
+        map_page(pt, pa, pa, PTE_V | PTE_R | PTE_W | PTE_X, 0);
+    }
+
+    // 3b) For each page-aligned segment in flat_image:
+    LOG_INFO("[create_init_process] mapping elf started...");
+    size_t num_pages = (image_size + PAGE_SIZE - 1) / PAGE_SIZE;
+    for (size_t i = 0; i < num_pages; i++) {
+        paddr_t page = alloc_pages(1);
+        size_t c = (i == num_pages - 1)
+            ? (image_size - i * PAGE_SIZE)
+            : PAGE_SIZE;
+        memcpy((void*)page, (uint8_t*)flat_image + i * PAGE_SIZE, c);
+        map_page(pt,
+                 USER_BASE + i * PAGE_SIZE,
+                 page,
+                 PTE_V | PTE_U | PTE_R | PTE_W | PTE_X,
+                0);
+    }
+    LOG_INFO("[create_init_process] mapping elf done!");
+
+    // 4) Map the user stack to exactly __user_stack_top - PAGE_SIZE
+    uint64_t user_stack_size = g_user_stack_top - g_user_stack_bottom;
+
+    if (debug_flag) {
+        LOG_DEBUG("[create_init_process] stack_bottom aligned? %s", (g_user_stack_bottom % PAGE_SIZE == 0) ? "Yes" : "No");
+        LOG_DEBUG("[create_init_process] stack_top    aligned? %s", (g_user_stack_top % PAGE_SIZE == 0) ? "Yes" : "No");
+    }
+    LOG_INFO("[create_init_process] mapping userstack top = 0x%x, bottom = 0x%x", 
+        g_user_stack_top, g_user_stack_bottom);
+
+    for (uint64_t va = g_user_stack_bottom; va <= g_user_stack_top; va += PAGE_SIZE) {
+        paddr_t pa = alloc_pages(1);
+        map_page(p->page_table, va, pa, PTE_V | PTE_R | PTE_W | PTE_U, 0);
+    }
+   
+    LOG_INFO("[create_init_process] User stack: 0x%x - 0x%x (%u bytes)",
+            g_user_stack_bottom, g_user_stack_top, user_stack_size);
+
+    // 5) Map the first heap page to g_user_heap_start
+    paddr_t heap_page = alloc_pages(1);
+    map_page(pt, g_user_heap_start, heap_page, PTE_V | PTE_U | PTE_R | PTE_W, 0);
+    memset((void*)heap_page, 0, PAGE_SIZE);
+    LOG_INFO("[create_init_process] Heap : 0x%x", heap_page);
+
+    // 6) Complete the PCB and make it runnable
+    p->pid        = 1 + (p - procs);
+    p->state      = PROC_RUNNABLE;
+    p->heap_end   = g_user_heap_start + PAGE_SIZE;
+    p->user_stack_top = g_user_stack_top;
+    p->entry_point    = USER_BASE;
+
+    p->image_pa = (paddr_t)flat_image;
+    p->image_npages = num_pages;
+    
+    //dump_trap_frame(tf);
+    LOG_INFO("[create_init_process] Process pointer created : 0x%p", p);
+    return p;
+}
+

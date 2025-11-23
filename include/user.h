@@ -11,5 +11,5 @@ typedef enum {
     LOG_LVL_DBG
 } user_log_level_t;
 
-
+void user_entry(void);
 void log_user(user_log_level_t level, const char *fmt, ...);

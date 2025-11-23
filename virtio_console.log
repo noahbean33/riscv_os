@@ -1,6 +1,15 @@
-[INFO] init: PID=5, status=running, hex=0xdeadbeef
-[WARN] init: PID=5, status=running, hex=0xdeadbeef
-[ERR] init: PID=5, status=running, hex=0xdeadbeef
-[DBG] init: PID=5, status=running, hex=0xdeadbeef
-[DBG] kernel: gestart
-[DBG] number=123, hex=0xbeef
+[INFO] [tarfs] found: idle.elf
+[DBG] [create_init_process] p->tf is at 0x80229a68
+[DBG] [create_init_process] p->tf->epc = 0x1000000
+[DBG] [create_init_process] p->tf->ra = 0x80202fc8
+[DBG] [create_init_process] p->tf->sp is at 0x1020000
+[INFO] [create_init_process] created user pagetable at : 0x802ae000
+[INFO] [create_init_process] mapping elf started...
+[INFO] [create_init_process] mapping elf done!
+[DBG] [create_init_process] stack_bottom aligned? Yes
+[DBG] [create_init_process] stack_top    aligned? Yes
+[INFO] [create_init_process] mapping userstack top = 0x1020000, bottom = 0x1010000
+[INFO] [create_init_process] User stack: 0x1010000 - 0x1020000 (65536 bytes)
+[INFO] [create_init_process] Heap : 0x80304000
+[INFO] [create_init_process] Process pointer created : 0x0x80227b18
+[INFO] [kernel_main] idle.elf loaded.

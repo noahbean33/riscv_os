@@ -72,6 +72,8 @@ $CC $CFLAGS -Wl,-Tkernel.ld -Wl,-Map=bin/kernel.map -o bin/kernel.elf \
     kernel/virtio.c \
     kernel/virtio-emerg.c \
     kernel/user.c \
+    kernel/process.c \
+    kernel/elf-loader.c \
     "$INITRAMFS_DIR/initramfs.o"
 
 # === Start socket communicatie ===

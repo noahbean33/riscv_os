@@ -1,6 +1,7 @@
 #include "string.h"
 #include "tar-parser.h"
 #include "uart.h"
+#include "debug.h"
 
 void *tarfs_lookup(const char *filename, size_t *filesize, int output_flag) {
     uint8_t *ptr = _binary_initramfs_tar_start;
@@ -11,7 +12,7 @@ void *tarfs_lookup(const char *filename, size_t *filesize, int output_flag) {
         if (hdr->name[0] == '\0') break; // End of archive
 
         if (output_flag) {
-            uart_printf("[tarfs] found: %s\n" , hdr->name);
+            LOG_INFO("[tarfs] found: %s" , hdr->name);
         }
 
         if (strcmp(hdr->name, filename) == 0) {

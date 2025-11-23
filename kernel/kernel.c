@@ -11,9 +11,16 @@
 #include "tar-parser.h"
 #include "virtio.h"
 #include "debug.h"
-
+#include "process.h"
+#include "elf-loader.h"
+#include "string.h"
 
 pagetable_t kernel_pagetable;
+
+struct process *current_proc;   // Currently running process
+struct process *idle_proc;      // Idle process
+int process_count = 0;          // Number of created processes
+
 
 void kernel_main(void) {
 
@@ -42,14 +49,19 @@ void kernel_main(void) {
     // initialzie virtio
     virtio_bus_init_scan();
 
-    log_test();
-    
     // load idle process
     size_t fs;
     void *idle_elf_file = tarfs_lookup("idle.elf", &fs, 1);
     if (!idle_elf_file) {
         PANIC("[kernel_main] idle.elf not found!");
     }
+
+    // create idle process
+    idle_proc = extract_flat_binary_from_elf(idle_elf_file, CREATE_PROCESS);
+    idle_proc->pid = 0; // idle
+    strcpy(idle_proc->name, "idle");
+    current_proc = idle_proc;
+    LOG_INFO("[kernel_main] idle.elf loaded.");
 
     for(;;);
 }

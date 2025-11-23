@@ -52,10 +52,10 @@ void virtio_bus_init_scan() {
                 case VIRTIO_DEV_ID_INPUT : 
                     uart_puts("  → Input device\n"); 
                     break;
-                default: uart_puts("  → Onbekend of unsupported device\n"); break;
+                default: uart_puts("  → Unknown or unsupported device\n"); break;
             }
         }
     }
 
-    uart_puts("[virtio-debug] Scan voltooid.\n");
+    uart_puts("[virtio-debug] Scan completed.\n");
 }
