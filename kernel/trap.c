@@ -4,6 +4,8 @@
 #include "uart.h"
 #include "debug.h"
 #include "string.h"
+#include "syscall.h"
+#include "types.h"
 
 extern struct process *current_proc;    // Currently running process
 
@@ -11,14 +13,24 @@ void trap_handler(trap_frame_t *f)
 {
     uint64_t scause = READ_CSR(scause);
     uint64_t stval = READ_CSR(stval);
+    uint64_t user_pc= READ_CSR(sepc);
 
     if (f == NULL)
         PANIC("[trap_handler] trapframe = NULL\n");
 
-    uart_printf("[trap_handler] SP = 0x%lx, EPC = 0x%lx\n", f->sp, f->epc);
+    //uart_printf("[trap_handler] SP = 0x%lx, EPC = 0x%lx\n", f->sp, f->epc);
 
     // Get the sp+epc saved on the stack by trap_vector ---
     memcpy(current_proc->tf, f, sizeof(trap_frame_t));
+
+
+    // Syscall afhandelen
+    if (scause == SCAUSE_ECALL) {
+        handle_syscall(f);
+        // Note : after a syscall we jump 4 bytes further
+        WRITE_CSR(sepc, user_pc + 4);
+        return;
+    }
 
     //  dump en panic ---
     LOG_USER_INFO("[trap_handler] ");

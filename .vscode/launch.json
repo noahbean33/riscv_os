@@ -7,7 +7,7 @@
       "request": "launch",
       "program": "${workspaceFolder}/bin/kernel.elf",
       "cwd": "${workspaceFolder}",
-      "miDebuggerPath": "/home/<YOUR USERNAME>/opt/riscv/bin/riscv64-unknown-elf-gdb",
+      "miDebuggerPath": "/home/novix/opt/riscv/bin/riscv64-unknown-elf-gdb",
       "miDebuggerServerAddress": "localhost:1234",
       "stopAtEntry": true,
       "preLaunchTask": "Run QEMU",

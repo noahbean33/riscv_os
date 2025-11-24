@@ -4,6 +4,8 @@
 #include "regs.h"
 #include "assert.h"
 
+#define SCAUSE_ECALL 8
+
 // The trap_frame struct represents the program state saved in kernel_entry. 
 struct trap_frame {
     regs_t regs;    // General-purpose registers

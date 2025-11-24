@@ -23,6 +23,12 @@ rm -f user/*.elf user/*.map
 rm -f "$INITRAMFS_DIR"/initramfs.tar "$INITRAMFS_DIR"/initramfs.o
 rm -f "$KERNEL_OUT_DIR"/kernel.elf "$KERNEL_OUT_DIR"/kernel.map
 
+# === Build userland ===
+echo "Compile shared userlib sources ..."
+for src in common.c exit.c printf.c string.c syscall.c; do
+  $CC $CFLAGS -c user/lib/$src -o user/bin/${src%.c}.o
+done
+
 # === Compile startup crt0 ===
 echo "Compile startup (crt0/init_crt0) ..."
 $CC $CFLAGS -c user/lib/init_crt0.S -o user/bin/init_crt0.o
@@ -30,12 +36,11 @@ $CC $CFLAGS -c user/lib/init_crt0.S -o user/bin/init_crt0.o
 # === Compile user programs ===
 echo "Compile user programs ..."
 $CC $CFLAGS -c user/idle.c -o user/bin/idle.o
-$CC $CFLAGS -c user/lib/exit.c -o user/bin/exit.o
 $CC $CFLAGS -c user/shell.c -o user/bin/shell.o
 
 # === Build static userlib ===
 echo "Build static userlib ..."
-$AR rcs user/lib/libuser.a user/bin/exit.o
+$AR rcs user/lib/libuser.a user/bin/common.o user/bin/exit.o user/bin/printf.o user/bin/string.o user/bin/syscall.o
 
 # === Link user programs ===
 echo "Link user programs ..."
@@ -81,6 +86,7 @@ $CC $CFLAGS -Wl,-Tkernel.ld -Wl,-Map=bin/kernel.map -o bin/kernel.elf \
     kernel/util.c \
     kernel/context.c \
     kernel/scheduler.c \
+    kernel/syscall.c \
     "$INITRAMFS_DIR/initramfs.o"
 
 # === Start socket communicatie ===
