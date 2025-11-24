@@ -93,3 +93,4 @@ void map_mmio_range(pagetable_t pt, uint64_t pa_start, uint64_t va_start, uint64
 
 pte_t* walk(pagetable_t pagetable, uint64_t va, int alloc);
 paddr_t walkaddr(pagetable_t pagetable, vaddr_t va);
+paddr_t walk_page(pagetable_t pagetable, vaddr_t va);

@@ -100,6 +100,88 @@ int sys_write(uint64_t fd, uint64_t user_buf, uint64_t len) {
     return len;
 }
 
+int sys_fork(int debug_flag) {
+    proc_t *parent = current_proc;
+
+    // 1. Find a free PCB
+    proc_t *child = alloc_free_proc();
+    if (!child) return -1;
+    process_count += 1;
+    if (debug_flag) LOG_USER_DBG("[sys_fork] child allocated at: 0x%x", child);
+
+    // 2. Allocating trapframe
+    child->tf = (trap_frame_t *)alloc_pages(1);
+    if (!child->tf) return -1;
+    if (debug_flag) LOG_USER_DBG("[sys_fork] trapframe allocated at: 0x%x", child->tf);
+
+    // 3. Dump original trapframe from parent (for debug)
+    LOG_USER_INFO("[fork] source trapframe << PARENT >>");
+    dump_trap_frame(parent->tf);
+
+    // 4. Copy trapframe to child
+    memcpy(child->tf, parent->tf, sizeof(trap_frame_t));
+
+    // 5. Set correct return values
+    child->tf->regs.a0 = 0;                     // fork() return values for child
+    parent->tf->regs.a0 = child->pid;           // fork() return values for parent
+
+    // 6. Explicitly set PC/SP of child
+    child->tf->sp = parent->tf->sp;
+    child->tf->epc = parent->tf->epc + 4;       // next instruction for child, not fork again
+
+    if (debug_flag) {
+        LOG_USER_DBG("[fork] parent sp=0x%x, epc=0x%x", parent->tf->sp, parent->tf->epc);
+        LOG_USER_DBG("[fork] child  sp=0x%x, epc=0x%x", child->tf->sp, child->tf->epc);
+    }
+    
+    // 7. Page table for child process
+    pagetable_t new_pt = (pagetable_t)alloc_pages(1);
+    if (debug_flag) LOG_USER_DBG("[fork] user page table initialized at : 0x%x", new_pt);
+    child->page_table = new_pt;
+
+    // 8. Inherit kernel mappings
+    for (paddr_t pa = (paddr_t)__kernel_base;
+         pa < (paddr_t)__free_ram_end;
+         pa += PAGE_SIZE) {
+        map_page(new_pt, pa, pa, PTE_V | PTE_R | PTE_W | PTE_X, 0);
+    }
+
+    // 9. Copy user pages
+    vaddr_t start_va = USER_BASE;
+    vaddr_t end_va = parent->heap_end > parent->user_stack_top
+                   ? parent->heap_end
+                   : parent->user_stack_top;
+
+    for (vaddr_t va = start_va; va < end_va; va += PAGE_SIZE) {
+        paddr_t pa_parent = walk_page(parent->page_table, va);
+        if (!pa_parent) continue;
+
+        paddr_t pa_child = alloc_pages(1);
+        memcpy((void*)pa_child, (void*)PA2KA(pa_parent), PAGE_SIZE);
+        map_page(new_pt, va, pa_child, PTE_V | PTE_U | PTE_R | PTE_W | PTE_X, 0);
+    }
+
+    // 10. PCB fields
+    child->state = PROC_RUNNABLE;
+    child->heap_end = parent->heap_end;
+    child->user_stack_top = parent->user_stack_top;
+    child->entry_point = parent->entry_point;
+
+    child->parent = current_proc;
+    child->parent_pid = current_proc->pid;
+
+    strncpy(child->name, parent->name, sizeof(child->name) - 1);
+    child->name[sizeof(child->name) - 1] = '\0';
+
+    // 11. Finished!
+    LOG_USER_INFO("[fork] parent->tf->a0 = %d", parent->tf->regs.a0);
+    LOG_USER_INFO("[fork] child->tf->a0 = %d", child->tf->regs.a0);
+    LOG_USER_INFO("[fork] pid = %d proc_t @ %p", child->pid, child);
+    LOG_USER_INFO("[fork] fork with pid %d ready.", child->pid);
+    
+    return child->pid;
+}
+
 void handle_syscall(struct trap_frame *f) {
 
     switch (f->regs.a7) {       // syscall number :  POSIX / System V ABI conventions (RISC-V 64)
@@ -110,6 +192,15 @@ void handle_syscall(struct trap_frame *f) {
 
         case SYS_WRITE:
             f->regs.a0 = sys_write(f->regs.a0, f->regs.a1, f->regs.a2);
+            break;
+
+        case SYS_YIELD:
+            yield();
+            f->regs.a0 = 0;
+            break;
+
+         case SYS_FORK:
+            f->regs.a0 = sys_fork(1);   
             break;
 
         case SYS_CLEAR:

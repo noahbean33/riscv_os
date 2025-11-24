@@ -76,11 +76,27 @@ __attribute__((naked)) void user_return(void) {
         "andi t1, t1, ~0x100\n"   // clear SPP (bit 8)
         "csrw sstatus, t1\n"
 
+        // Zet argv en argc
+        "la   t2, current_proc\n"     // &current_proc
+        "ld   t2, 0(t2)\n"            // current_proc
+
+        // argc
+        "li   t3, %[argc_offset]\n"
+        "add  t3, t2, t3\n"
+        "ld   a0, 0(t3)\n"
+
+        // argv_ptr
+        "li   t3, %[argv_offset]\n"
+        "add  t3, t2, t3\n"
+        "ld   a1, 0(t3)\n"
+
         // return to userspace
         "fence.i\n"
         "sret\n"
         :
-        : [tf_offset] "i"(OFFSET_TF)
+        : [tf_offset] "i"(OFFSET_TF),
+          [argc_offset] "i"(OFFSET_ARGC),
+          [argv_offset] "i"(OFFSET_ARGV_PTR)
     );
 }
 

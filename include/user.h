@@ -7,6 +7,8 @@
 
 // Offset van 'tf' binnen struct process
 #define OFFSET_TF       (offsetof(struct process, tf))
+#define OFFSET_ARGC     (offsetof(proc_t, argc))
+#define OFFSET_ARGV_PTR (offsetof(proc_t, argv_ptr))
 
 // Typen voor user loglevels
 typedef enum {

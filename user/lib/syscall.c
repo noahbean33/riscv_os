@@ -23,3 +23,11 @@ int write(int fd, const void *buf, size_t len) {
 void cls() {
     syscall(SYS_CLEAR, 0, 0, 0);
 }
+
+int fork(void) {
+    return syscall(SYS_FORK, 0, 0, 0);
+}
+
+void yield(void) {
+    syscall(SYS_YIELD, 0, 0, 0);
+}

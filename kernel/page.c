@@ -134,6 +134,17 @@ void map_mmio_range(pagetable_t pt, uint64_t pa_start, uint64_t va_start, uint64
     }
 }
 
+paddr_t walk_page(pagetable_t pagetable, vaddr_t va) {
+    for (int level = 2; level > 0; level--) {
+        pte_t *pte = &pagetable[PX(level, va)];
+        if (!(*pte & PTE_V)) return 0;
+        pagetable = (pte_t *)PA2KA(PTE2PA(*pte));
+    }
+    pte_t pte = pagetable[PX(0, va)];
+    if (!(pte & PTE_V)) return 0;
+    return PTE2PA(pte);
+}
+
 pte_t* walk(pagetable_t pagetable, uint64_t va, int alloc) {
     if (va >= MAXVA)
         PANIC("walk: virtual address too high");

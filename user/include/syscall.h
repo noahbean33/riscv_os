@@ -39,3 +39,5 @@ void* sbrk(long increment);
 ssize_t read(int fd, void *buf, size_t count);
 int write(int fd, const void *buf, size_t len);
 void cls();
+int fork(void);
+void yield(void);
