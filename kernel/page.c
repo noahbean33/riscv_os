@@ -7,7 +7,7 @@
 #include "uart.h"
 #include "riscv.h"
 #include "virtio-mmio.h"
-
+#include "debug.h"
 
 extern pagetable_t kernel_pagetable;
 extern struct process *current_proc;   // Currently running process
@@ -48,7 +48,6 @@ static paddr_t alloc_free_list(void) {
     return pa;
 }
  
-
 // Allocation of n contiguous pages
 paddr_t alloc_pages(uint64_t n) {
     paddr_t pa;
@@ -62,7 +61,7 @@ paddr_t alloc_pages(uint64_t n) {
           //  uart_printf("[ALLOC] page at 0x%x (%d page(s))\n", (uint64_t)pa, n);
             return pa;
         }
-        // Anders bump-pointer van de heap
+        // Otherwise bump pointer of the heap
         pa = next_paddr;
         next_paddr += PAGE_SIZE;
         if (next_paddr > (paddr_t)__free_ram_end)
@@ -83,6 +82,20 @@ paddr_t alloc_pages(uint64_t n) {
        
        // uart_printf("[ALLOC] page at 0x%x (%d page(s))\n", (uint64_t)pa, n);
         return pa;
+    }
+}
+
+// Add a physical page to the free list
+void free_page(paddr_t pa) {
+    // uart_printf("[FREE ] page at 0x%x\n", pa);
+    *(paddr_t *)pa = free_list;
+    free_list = pa;
+    g_free_pages++;  // ✅ bijhouden
+}
+
+void free_pages_range(paddr_t pa, size_t npages) {
+    for (size_t i = 0; i < npages; i++) {
+        free_page(pa + i * PAGE_SIZE);
     }
 }
 
@@ -118,6 +131,27 @@ void map_page(pagetable_t root_table, uint64_t va, uint64_t pa, uint64_t flags, 
     if (debug_flag) uart_printf("[map_page] VA=0x%x -> PA=0x%x flags=0x%x\n", va, pa, flags);
 }
 
+void unmap_page(pagetable_t root_table, vaddr_t va) {
+    if (va % PAGE_SIZE != 0)
+        PANIC("unaligned va: 0x%lx", va);
+
+    int vpn2 = (va >> 30) & 0x1FF;
+    int vpn1 = (va >> 21) & 0x1FF;
+    int vpn0 = (va >> 12) & 0x1FF;
+
+    pagetable_t pt = root_table;
+
+    if (!(pt[vpn2] & PTE_V)) return;
+    pt = (pagetable_t)((pt[vpn2] >> 10) << 12);
+
+    if (!(pt[vpn1] & PTE_V)) return;
+    pt = (pagetable_t)((pt[vpn1] >> 10) << 12);
+
+    pt[vpn0] = 0; // verwijder PTE
+
+    sfence_vma(); // update TLB
+}
+
 void set_active_pagetable(uintptr_t new_pagetable) {
     sfence_vma();
     WRITE_CSR(satp, MAKE_SATP(new_pagetable));
@@ -131,6 +165,50 @@ void map_mmio_range(pagetable_t pt, uint64_t pa_start, uint64_t va_start, uint64
                  pa_start + offset,
                  perm,
                  0);
+    }
+}
+
+void debug_pagetable(const char *who) {
+    // read satp and extract the PPN (lower 44 bits are PPN)
+    uint64_t satp = READ_CSR(satp);
+    uint64_t ppn  = satp & ((1ULL << 44) - 1);
+
+    // shift back to physical base address
+    uint64_t root_pa = ppn << 12;
+
+    LOG_USER_DBG("[%s] active page table @ 0x%x", who, root_pa);
+}
+
+// Recursively free a page-table. `lvl` is index level: 2=L2 (root), 1=L1, 0=L0 (leaf).
+void free_pagetable(pagetable_t pt, int lvl) {
+    for (int i = 0; i < 512; i++) {
+        pte_t e = pt[i];
+        if (!(e & PTE_V)) continue;   // not valid, nothing to do
+
+        paddr_t child_pa = (paddr_t)((e >> PTE_PPN_SHIFT) << PAGE_SHIFT);
+
+        if ((e & (PTE_R | PTE_W | PTE_X)) && lvl == 0) {
+            // leaf entry (pointing to a page). Free only user-pages!
+            if (e & PTE_U) {
+                free_page(child_pa);
+                // debug:
+                // uart_printf("[FREE ] leaf page at 0x%x\n", child_pa);
+            } else {
+                // kernel-leaf: laat staan (niet vrijgeven)
+            }
+        } else {
+            // sub-pagetable (pointer naar volgende level)
+            pagetable_t next = (pagetable_t)PA2KA(child_pa);
+            free_pagetable(next, lvl - 1);
+
+            // now free the page table itself (this frame contains the next-level page table)
+            free_page(child_pa);
+            // debug:
+            // uart_printf("[FREE ] pagetable at 0x%x (lvl=%d)\n", child_pa, lvl-1);
+        }
+
+        // clear PTE
+        pt[i] = 0;
     }
 }
 
@@ -167,7 +245,6 @@ pte_t* walk(pagetable_t pagetable, uint64_t va, int alloc) {
 
     return &pagetable[PX(0, va)];
 }
-
 
 // Find the physical address associated with a virtual user address
 paddr_t walkaddr(pagetable_t pagetable, vaddr_t va) {

@@ -40,4 +40,5 @@ ssize_t read(int fd, void *buf, size_t count);
 int write(int fd, const void *buf, size_t len);
 void cls();
 int fork(void);
+int exec(const char *program_name);
 void yield(void);

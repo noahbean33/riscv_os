@@ -59,11 +59,13 @@ typedef struct process {
 }  proc_t;
 
 struct process *create_init_process(const void *flat_image, size_t image_size, int debug_flag);
+struct process *exec_process(const void *flat_image, size_t image_size, int debug_flag);
 proc_t *get_proc_by_pid(int pid);
 proc_t *alloc_free_proc(void);
 void strip_elf_extension(const char *progname, char *out_name, size_t maxlen);
 
-
 void dump_pcb(proc_t *p);
 void print_process_table(void);
 const char* proc_state_str(int state);
+
+void process_free_userspace(proc_t *p);

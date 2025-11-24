@@ -94,3 +94,9 @@ void map_mmio_range(pagetable_t pt, uint64_t pa_start, uint64_t va_start, uint64
 pte_t* walk(pagetable_t pagetable, uint64_t va, int alloc);
 paddr_t walkaddr(pagetable_t pagetable, vaddr_t va);
 paddr_t walk_page(pagetable_t pagetable, vaddr_t va);
+
+void unmap_page(pagetable_t root_table, vaddr_t va);
+void free_page(paddr_t pa);
+void free_pages_range(paddr_t pa, size_t npages);
+void free_pagetable(pagetable_t pt, int lvl);
+void debug_pagetable(const char *who);

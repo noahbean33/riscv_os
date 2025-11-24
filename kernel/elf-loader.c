@@ -104,6 +104,6 @@ struct process* extract_flat_binary_from_elf(const void *elf_data, int create_pr
     if (create_process_flag)
         return create_init_process(flat_image, image_size, 1);
     else 
-        return NULL;
+        return exec_process(flat_image, image_size, 0);
     
 }

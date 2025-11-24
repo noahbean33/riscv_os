@@ -1,7 +1,5 @@
 #include "include/stdio.h"
 #include "include/syscall.h"
-#include "include/string.h"
-#include "include/malloc.h"
 
 void main() {
 
@@ -11,7 +9,7 @@ void main() {
     int pid = fork();
     if (pid == 0) {
         // child
-        puts("[shell] hello from child\n");
+        exec("hello.elf");
     } else {
         printf("[shell] created child with pid %d\n", pid);
 

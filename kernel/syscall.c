@@ -182,6 +182,66 @@ int sys_fork(int debug_flag) {
     return child->pid;
 }
 
+int sys_exec(const char *progname) {
+    char progname_buf[PROC_NAME_MAX_LEN];
+    size_t fs;
+
+    // 1. Zoek in tarfs
+    enable_sum();           // Enable SUM
+
+    strncpy(progname_buf, progname, sizeof(progname_buf) - 1);
+    progname_buf[sizeof(progname_buf) - 1] = '\0';                  // null-terminate for safety
+    const void *elf_data = tarfs_lookup(progname, &fs, 0);
+    if (!elf_data) {
+        uart_printf("[sys_exec] %s not found!\n", progname);
+        return -1;
+    }
+
+    disable_sum();          // Disable SUM
+
+    // 3. Zet kernel page table actief
+    set_active_pagetable((uintptr_t)kernel_pagetable);
+    
+    // 4. Maak huidig process schoon: stack resetten, heap/bss op nul zetten etc.
+    proc_t *proc = current_proc;
+    process_free_userspace(proc);  
+   
+    // 5. Laad het nieuwe ELF-programma
+    struct process *ep = extract_flat_binary_from_elf(elf_data, EXEC_PROCESS);
+
+    // 6. Zet progname minus '.elf' in de pcb
+    strip_elf_extension(progname_buf, ep->name, sizeof(ep->name));
+    
+    // 7. Activeer de nieuwe pagetable en stack
+    set_active_pagetable((uintptr_t)ep->page_table);
+    WRITE_CSR(sscratch, (uint64_t)(ep->tf_stack + sizeof(ep->tf_stack)));
+
+    // 8a. setup sp
+    uint64_t sp = g_user_stack_top;
+
+    LOG_USER_INFO("[sys_exec] Init trapframe start.");
+    
+    // 9a. Setup trapframe
+    trap_frame_t *tf = ep->tf;
+    memset(tf, 0, sizeof(*tf));
+    tf->epc      = USER_BASE;               // epc
+    tf->regs.ra  = (uint64_t)user_return;   // ra
+    tf->sp = sp;                            // sp
+   
+    // debug
+    LOG_USER_DBG("[sys_exec] New EPC: 0x%x, SP: 0x%x", ep->tf->epc, ep->tf->sp);
+    LOG_USER_DBG("[sys_exec] CSR stvec   = 0x%x", READ_CSR(stvec));
+    LOG_USER_DBG("[sys_exec] CSR sstatus = 0x%x", READ_CSR(sstatus));
+    
+    debug_pagetable("sys_exec");
+    dump_pcb(current_proc);
+    LOG_USER_INFO("[sys_exec] ready...");
+
+    yield();
+
+    return 0;
+}
+
 void handle_syscall(struct trap_frame *f) {
 
     switch (f->regs.a7) {       // syscall number :  POSIX / System V ABI conventions (RISC-V 64)
@@ -201,6 +261,13 @@ void handle_syscall(struct trap_frame *f) {
 
          case SYS_FORK:
             f->regs.a0 = sys_fork(1);   
+            break;
+
+         case SYS_EXEC:
+            enable_sum();
+            const char* filename = (const char*)f->regs.a0;
+            f->regs.a0 = sys_exec(filename);
+            disable_sum();
             break;
 
         case SYS_CLEAR:
