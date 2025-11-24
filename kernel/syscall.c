@@ -41,6 +41,28 @@ void disable_sum(void) {
     WRITE_CSR(sstatus, s & ~SSTATUS_SUM);
 }
 
+long sys_sbrk(long increment) {
+    
+    proc_t *p = current_proc;
+    uintptr_t old_heap = p->heap_end;
+    uintptr_t new_heap = old_heap + increment;
+
+    //uart_printf("[sys_sbrk] user heap_end = 0x%x, inc = %d\n", p->heap_end, increment);
+
+    if (increment > 0) {
+        for (uintptr_t addr = PGROUNDUP(old_heap); addr < new_heap; addr += PAGE_SIZE) {
+            paddr_t pa = alloc_pages(1);
+            if (!pa) return -1;
+            void* new_page = (void*)(uintptr_t)pa;
+            map_page(p->page_table, addr, (uintptr_t)new_page, PTE_U | PTE_R | PTE_W | PTE_V, 0);
+        }
+    }
+
+    p->heap_end = new_heap;
+    return old_heap;
+}
+
+
 ssize_t sys_read(int fd, char *buf, size_t len) {
     enable_sum();
     if (fd != 0 || buf == NULL || len == 0) {
@@ -98,6 +120,10 @@ void handle_syscall(struct trap_frame *f) {
          case SYS_PUTCHAR: 
             uart_putc(f->regs.a0);
             f->regs.a0 = 0;
+            break;
+
+        case SYS_SBRK :
+            f->regs.a0 = sys_sbrk(f->regs.a0);
             break;
 
         default:

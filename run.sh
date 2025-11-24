@@ -25,7 +25,7 @@ rm -f "$KERNEL_OUT_DIR"/kernel.elf "$KERNEL_OUT_DIR"/kernel.map
 
 # === Build userland ===
 echo "Compile shared userlib sources ..."
-for src in common.c exit.c printf.c string.c syscall.c; do
+for src in common.c exit.c malloc.c printf.c sbrk.c string.c syscall.c; do
   $CC $CFLAGS -c user/lib/$src -o user/bin/${src%.c}.o
 done
 
@@ -40,7 +40,7 @@ $CC $CFLAGS -c user/shell.c -o user/bin/shell.o
 
 # === Build static userlib ===
 echo "Build static userlib ..."
-$AR rcs user/lib/libuser.a user/bin/common.o user/bin/exit.o user/bin/printf.o user/bin/string.o user/bin/syscall.o
+$AR rcs user/lib/libuser.a user/bin/common.o user/bin/exit.o user/bin/malloc.o user/bin/printf.o user/bin/sbrk.o user/bin/string.o user/bin/syscall.o
 
 # === Link user programs ===
 echo "Link user programs ..."

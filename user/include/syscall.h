@@ -32,8 +32,10 @@
 #define SYS_DUMP_TF         500  // Debug syscalls, outside POSIX
 #define SYS_LOG             501
 
+extern char __user_heap_start[];
 
 int64_t syscall(int64_t num, int64_t arg0, int64_t arg1, int64_t arg2);
+void* sbrk(long increment);
 ssize_t read(int fd, void *buf, size_t count);
 int write(int fd, const void *buf, size_t len);
 void cls();
