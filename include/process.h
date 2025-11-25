@@ -69,3 +69,4 @@ void print_process_table(void);
 const char* proc_state_str(int state);
 
 void process_free_userspace(proc_t *p);
+void free_proc(proc_t *proc);

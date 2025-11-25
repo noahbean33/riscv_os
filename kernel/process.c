@@ -160,12 +160,12 @@ struct process *exec_process(const void *flat_image, size_t image_size, int debu
     p->tf = (trap_frame_t *)(p->tf_stack + sizeof(p->tf_stack) - sizeof(trap_frame_t));
     if (debug_flag) LOG_DEBUG("[exec_process] current proc = %d", p->pid);
 
-    // 2) Bouw je *eigen* user-PT
+    // 2) Build your *own* user PT
     pagetable_t pt = (pagetable_t)alloc_pages(1);
     p->page_table = pt;
     if (debug_flag) LOG_DEBUG("[exec_process] created pagetable at : 0x%x", pt);
 
-    // 2a) Identity-map wél het complete kernel-gebied
+    // 2a) Identity map does include the complete kernel area
     for (paddr_t pa = (paddr_t)__kernel_base;
          pa < (paddr_t)__free_ram_end;
          pa += PAGE_SIZE) {
@@ -173,7 +173,7 @@ struct process *exec_process(const void *flat_image, size_t image_size, int debu
     }
 
     if (debug_flag) LOG_DEBUG("[exec_process] mapping elf started...");
-    // 2b) Voor elk pagina-aligned segment in flat_image:
+    // 2b) For each page-aligned segment in flat_image:
     size_t num_pages = (image_size + PAGE_SIZE - 1) / PAGE_SIZE;
     for (size_t i = 0; i < num_pages; i++) {
         paddr_t page = alloc_pages(1);
@@ -189,7 +189,7 @@ struct process *exec_process(const void *flat_image, size_t image_size, int debu
     }
     if (debug_flag) LOG_DEBUG("[exec_process] mapping elf done!");
 
-    // 3) Map de user-stack op exact __user_stack_top - PAGE_SIZE
+    // 3) Map the user stack to exactly __user_stack_top - PAGE_SIZE
     uint64_t user_stack_size = g_user_stack_top - g_user_stack_bottom;
 
     if (debug_flag) {
@@ -205,13 +205,13 @@ struct process *exec_process(const void *flat_image, size_t image_size, int debu
     if (debug_flag) LOG_DEBUG("[exec_process] User stack: 0x%x - 0x%x (%u bytes)",
             g_user_stack_bottom, g_user_stack_top, user_stack_size);
 
-    // 4a) Map alvast eerste heappagina op g_user_heap_start
+    // 4a) Map the first heap page to g_user_heap_start
     paddr_t heap_page = alloc_pages(1);
     map_page(pt, g_user_heap_start, heap_page, PTE_V | PTE_U | PTE_R | PTE_W, 0);
     memset((void*)heap_page, 0, PAGE_SIZE);
     if (debug_flag) LOG_DEBUG("[exec_process] Heap : 0x%x", heap_page);
 
-    // 5) Vul de PCB in en maak ‘m runnable
+    // 5) Complete the PCB and make it runnable
     p->state      = PROC_RUNNING;
     p->heap_end   = g_user_heap_start + PAGE_SIZE;
     p->user_stack_top = g_user_stack_top;
@@ -225,11 +225,44 @@ struct process *exec_process(const void *flat_image, size_t image_size, int debu
     return p;
 }
 
+void free_proc(proc_t *proc) {
+
+    if (proc->tf) {
+        proc->tf = NULL;
+    }
+
+    if (proc->image_pa) {
+        free_pages_range(proc->image_pa, proc->image_npages);
+        proc->image_pa = 0;
+        proc->image_npages = 0;
+    }
+
+    if (proc->page_table) {
+        process_free_userspace(proc);
+        proc->page_table = NULL;
+    }
+
+    // Reset PCB fields (defensive)
+    proc->state = PROC_UNUSED;
+    proc->pid = 0;
+    proc->parent = NULL;
+    proc->name[0] = '\0';
+    proc->heap_end = 0;
+    proc->user_stack_top = 0;
+    proc->argc = 0;
+    proc->argv_ptr = 0;
+
+    process_count -= 1;
+    LOG_USER_DBG("[free_proc] g_free_pages %d", g_free_pages);
+    LOG_USER_DBG("[free_proc] process_count = %d", process_count);
+    LOG_USER_INFO("[free_proc] process cleaned up");
+}
+
 void process_free_userspace(proc_t *p) {
     pagetable_t root = p->page_table;
     if (!root) return;
 
-    // 1) Unmap & vrij individuele user leaf pages tussen USER_BASE .. max(heap,stack)
+    // 1) Unmap and free individual user leaf pages between USER_BASE .. max(heap,stack)
     vaddr_t start_va = USER_BASE;
     vaddr_t end_va   = p->heap_end > g_user_stack_top ? p->heap_end : g_user_stack_top;
 
@@ -252,16 +285,16 @@ void process_free_userspace(proc_t *p) {
         pagetable_t l0 = (pagetable_t)PA2KA((l1e >> PTE_PPN_SHIFT) << PAGE_SHIFT);
         pte_t pte = l0[vpn0];
         if (!(pte & PTE_V)) continue;
-        if (!(pte & PTE_U)) continue;  // alleen user-leaf
+        if (!(pte & PTE_U)) continue;  // only user-leaf
 
         // free leaf
         paddr_t pa = (paddr_t)((pte >> PTE_PPN_SHIFT) << PAGE_SHIFT);
-        unmap_page(root, va);   // verwijder mapping
-        free_page(pa);         // vrij fysieke pagina
+        unmap_page(root, va);   // remove mapping
+        free_page(pa);         // free physical page
     }
 
     // 2) Free pagetables (L0/L1/L2) themselves recursively.
-    //    free_pagetable zal alleen user leafs vrijgeven; sub-pagetables altijd.
+    //    free_pagetable will only free user leaves; always free sub-pagetables.
     free_pagetable(root, /*lvl=*/2);
 
     // 3) Free the root pagetable frame itself.

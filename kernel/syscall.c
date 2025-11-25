@@ -23,7 +23,6 @@
 #include "virtio-emerg.h"
 #include "debug.h"
 
-
 extern struct process *current_proc; // Currently running process
 extern int process_count;
 extern pagetable_t kernel_pagetable;
@@ -61,7 +60,6 @@ long sys_sbrk(long increment) {
     p->heap_end = new_heap;
     return old_heap;
 }
-
 
 ssize_t sys_read(int fd, char *buf, size_t len) {
     enable_sum();
@@ -186,7 +184,7 @@ int sys_exec(const char *progname) {
     char progname_buf[PROC_NAME_MAX_LEN];
     size_t fs;
 
-    // 1. Zoek in tarfs
+    // 1. Search in tarfs
     enable_sum();           // Enable SUM
 
     strncpy(progname_buf, progname, sizeof(progname_buf) - 1);
@@ -199,20 +197,20 @@ int sys_exec(const char *progname) {
 
     disable_sum();          // Disable SUM
 
-    // 3. Zet kernel page table actief
+    // 3. Enable kernel page table
     set_active_pagetable((uintptr_t)kernel_pagetable);
     
-    // 4. Maak huidig process schoon: stack resetten, heap/bss op nul zetten etc.
+    // 4. Clean up the current process: reset the stack, set heap/bss to zero, etc.
     proc_t *proc = current_proc;
     process_free_userspace(proc);  
    
-    // 5. Laad het nieuwe ELF-programma
+    // 5. Load the new ELF program
     struct process *ep = extract_flat_binary_from_elf(elf_data, EXEC_PROCESS);
 
-    // 6. Zet progname minus '.elf' in de pcb
+    // 6. Put the program name minus '.elf' in the PCB
     strip_elf_extension(progname_buf, ep->name, sizeof(ep->name));
     
-    // 7. Activeer de nieuwe pagetable en stack
+    // 7. Activate the new pagetable and stack
     set_active_pagetable((uintptr_t)ep->page_table);
     WRITE_CSR(sscratch, (uint64_t)(ep->tf_stack + sizeof(ep->tf_stack)));
 
@@ -242,6 +240,56 @@ int sys_exec(const char *progname) {
     return 0;
 }
 
+void sys_exit(int code) {
+    proc_t *proc = current_proc;
+
+    LOG_USER_INFO("[sys_exit] pid=%d exit(%d)", proc->pid, code);
+
+    proc->state = PROC_ZOMBIE;
+    proc->exit_code = code;
+
+    // Give control back to scheduler
+    yield();  // YIELD only to be used without timer, for debugging purposes !!!!
+}
+
+int sys_wait(int *status, int debug_flag) {
+    if (debug_flag) LOG_USER_DBG("[sys_wait] started ...");
+
+    proc_t *parent = current_proc;
+
+    while (1) {
+        for (int i = 0; i < PROCS_MAX; i++) {
+            proc_t *p = &procs[i];
+
+            // Validation: Skip empty entries
+            if (p == NULL) continue;
+
+            // Check if parent pointer appears valid
+            if (p->state == PROC_ZOMBIE && p->parent == parent) {
+                if (debug_flag) LOG_USER_DBG("[sys_wait] found zombie child pid=%d", p->pid);
+
+                // where exit code is requested as status
+                if (status != NULL) {
+                    enable_sum();
+                    *status = p->exit_code;
+                    disable_sum();
+                }
+
+                int dead_pid = p->pid;
+
+                // Cleanup process
+                free_proc(p);
+
+                if (debug_flag) LOG_USER_DBG("[sys_wait] cleaned up pid=%d", dead_pid);
+                return dead_pid;
+            }
+        }
+
+        // No zombies found: temporarily free up CPU
+        yield();
+    }
+}
+
 void handle_syscall(struct trap_frame *f) {
 
     switch (f->regs.a7) {       // syscall number :  POSIX / System V ABI conventions (RISC-V 64)
@@ -268,6 +316,15 @@ void handle_syscall(struct trap_frame *f) {
             const char* filename = (const char*)f->regs.a0;
             f->regs.a0 = sys_exec(filename);
             disable_sum();
+            break;
+
+         case SYS_EXIT:
+            sys_exit(f->regs.a0);
+            f->regs.a0 = 0;
+            break;
+
+        case SYS_WAIT:
+            f->regs.a0 = sys_wait((int *)f->regs.a0, 1);
             break;
 
         case SYS_CLEAR:

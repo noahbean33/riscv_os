@@ -13,6 +13,11 @@ void main() {
     } else {
         printf("[shell] created child with pid %d\n", pid);
 
+        puts("[shell] waiting for child...\n");
+        int status;
+        int dead = wait(&status);
+        printf("[shell] child %d exited with code %d\n", dead, status);
+
         yield(); // temporary until timer is active
     }
 

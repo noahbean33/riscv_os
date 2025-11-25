@@ -23,14 +23,23 @@ void cls() {
     syscall(SYS_CLEAR, 0, 0, 0);
 }
 
-int fork(void) {
-    return syscall(SYS_FORK, 0, 0, 0);
-}
-
 void yield(void) {
     syscall(SYS_YIELD, 0, 0, 0);
 }
 
+int fork(void) {
+    return syscall(SYS_FORK, 0, 0, 0);
+}
+
 int exec(const char *program_name) {
     return syscall(SYS_EXEC, (intptr_t)program_name, 0, 0);
+}
+
+void exit(int status) {
+    syscall(SYS_EXIT, status, 0, 0);
+    while (1) {}    // safety net if kernel does not return
+}
+
+int wait(int *wstatus) {
+    return syscall(SYS_WAIT, (uintptr_t)wstatus, 0, 0);
 }

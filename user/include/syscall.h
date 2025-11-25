@@ -28,7 +28,6 @@
 #define SYS_CLEAR           406
 #define SYS_TARFS_EXISTS    407
 
-
 #define SYS_DUMP_TF         500  // Debug syscalls, outside POSIX
 #define SYS_LOG             501
 
@@ -39,6 +38,8 @@ void* sbrk(long increment);
 ssize_t read(int fd, void *buf, size_t count);
 int write(int fd, const void *buf, size_t len);
 void cls();
+void yield(void);
 int fork(void);
 int exec(const char *program_name);
-void yield(void);
+void exit(int status);
+int wait(int *wstatus);
