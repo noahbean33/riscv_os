@@ -1,6 +1,6 @@
              VMA              LMA     Size Align Out     In      Symbol
                0                0  1000000     1 . = 0x1000000
-         1000000          1000000      7a8     2 .text
+         1000000          1000000      7b8     2 .text
          1000000          1000000        8     1         user/bin/crt0.o:(.text.start)
          1000000          1000000        0     1                 
          1000000          1000000        0     1                 $x.0
@@ -782,7 +782,7 @@
          1000720          1000720        0     1                 
          1000722          1000722        0     1                 
          1000722          1000722        0     1                 
-         1000722          1000722       86     2         user/lib/libuser.a(syscall.o):(.text)
+         1000722          1000722       96     2         user/lib/libuser.a(syscall.o):(.text)
          1000722          1000722        0     1                 
          1000722          1000722        0     1                 
          1000722          1000722        0     1                 $x.0
@@ -835,17 +835,23 @@
          10007a4          10007a4        0     1                 
          10007a4          10007a4        0     1                 
          10007a8          10007a8        0     1                 
-         10007a8          10007a8       e8     8 .rodata
-         10007a8          10007a8       35     1         <internal>:(.rodata.str1.1)
-         10007e0          10007e0       b0     8         user/lib/libuser.a(printf.o):(.rodata)
-         10007e0          10007e0        0     1                 .LJTI4_0
-         10007e0          10007e0        0     1                 $d.1
-         1000890          1000890        8     8 .bss
-         1000890          1000890        8     8         user/lib/libuser.a(string.o):(.sbss)
-         1000890          1000890        8     1                 strtok.saved
-         1000890          1000890        0     1                 $d.1
-         1000898          1000898        0     1         
-         1000898          1000898     f768     1 . = 0x1010000
+         10007a8          10007a8        0     1                 
+         10007a8          10007a8        0     1                 
+         10007a8          10007a8       10     1                 tarfs_exists
+         10007b4          10007b4        0     1                 
+         10007b4          10007b4        0     1                 
+         10007b8          10007b8        0     1                 
+         10007b8          10007b8       e8     8 .rodata
+         10007b8          10007b8       35     1         <internal>:(.rodata.str1.1)
+         10007f0          10007f0       b0     8         user/lib/libuser.a(printf.o):(.rodata)
+         10007f0          10007f0        0     1                 .LJTI4_0
+         10007f0          10007f0        0     1                 $d.1
+         10008a0          10008a0        8     8 .bss
+         10008a0          10008a0        8     8         user/lib/libuser.a(string.o):(.sbss)
+         10008a0          10008a0        8     1                 strtok.saved
+         10008a0          10008a0        0     1                 $d.1
+         10008a8          10008a8        0     1         
+         10008a8          10008a8     f758     1 . = 0x1010000
          1010000          1010000    10000     1 .stack
          1010000          1010000        0     1         __user_stack_bottom = .
          1010000          1010000    10000     1         . += 64 * 1024
@@ -854,7 +860,7 @@
          1020000          1020000        0     1 __user_heap_start = 0x03000000
          1020000          1020000  2000000     1 . += 32 * 1024 * 1024
          3020000          3020000        0     1 __user_heap_end = .
-               0                0     127c     1 .debug_info
+               0                0     12f9     1 .debug_info
                0                0       91     1         user/bin/crt0.o:(.debug_info)
                0                0        0     1                 
                0                0        0     1                 $d.4
@@ -864,7 +870,7 @@
              156              156        0     1                 $d.5
              8f3              8f3      49c     1         user/lib/libuser.a(string.o):(.debug_info)
              8f3              8f3        0     1                 $d.4
-             d8f              d8f      4ed     1         user/lib/libuser.a(syscall.o):(.debug_info)
+             d8f              d8f      56a     1         user/lib/libuser.a(syscall.o):(.debug_info)
              d8f              d8f        0     1                 $d.3
                0                0      4f2     1 .debug_abbrev
                0                0       21     1         user/bin/crt0.o:(.debug_abbrev)
@@ -881,7 +887,7 @@
                0                0       30     1 .debug_aranges
                0                0       30     1         user/bin/crt0.o:(.debug_aranges)
                0                0        0     1                 $d.2
-               0                0      e6c     1 .debug_line
+               0                0      e79     1 .debug_line
                0                0       49     1         user/bin/crt0.o:(.debug_line)
                0                0        0     1                 .Lline_table_start0
                0                0        0     1                 $d.5
@@ -894,10 +900,10 @@
              7be              7be      581     1         user/lib/libuser.a(string.o):(.debug_line)
              7be              7be        0     1                 .Lline_table_start0
              7be              7be        0     1                 $d.10
-             d3f              d3f      12d     1         user/lib/libuser.a(syscall.o):(.debug_line)
+             d3f              d3f      13a     1         user/lib/libuser.a(syscall.o):(.debug_line)
              d3f              d3f        0     1                 .Lline_table_start0
              d3f              d3f        0     1                 $d.8
-               0                0     1446     1 .debug_loc
+               0                0     1469     1 .debug_loc
                0                0       23     1         user/bin/hello.o:(.debug_loc)
                0                0        0     1                 
                0                0        0     1                 $d.2
@@ -977,7 +983,7 @@
             104e             104e        0     1                 
             10a5             10a5        0     1                 
             10c8             10c8        0     1                 
-            111f             111f      327     1         user/lib/libuser.a(syscall.o):(.debug_loc)
+            111f             111f      34a     1         user/lib/libuser.a(syscall.o):(.debug_loc)
             111f             111f        0     1                 
             111f             111f        0     1                 $d.1
             1155             1155        0     1                 
@@ -996,11 +1002,12 @@
             13dd             13dd        0     1                 
             1400             1400        0     1                 
             1423             1423        0     1                 
-               0                0      2c7     1 .debug_str
-               0                0      2c7     1         <internal>:(.debug_str)
+            1446             1446        0     1                 
+               0                0      2dd     1 .debug_str
+               0                0      2dd     1         <internal>:(.debug_str)
                0                0       42     1 .comment
                0                0       42     1         <internal>:(.comment)
-               0                0      338     8 .debug_frame
+               0                0      350     8 .debug_frame
                0                0       38     8         user/bin/hello.o:(.debug_frame)
                0                0        0     1                 
                0                0        0     1                 $d.8
@@ -1010,7 +1017,7 @@
              110              110      138     8         user/lib/libuser.a(string.o):(.debug_frame)
              110              110        0     1                 
              110              110        0     1                 $d.9
-             248              248       f0     8         user/lib/libuser.a(syscall.o):(.debug_frame)
+             248              248      108     8         user/lib/libuser.a(syscall.o):(.debug_frame)
              248              248        0     1                 
              248              248        0     1                 $d.7
                0                0      160     1 .debug_ranges
@@ -1024,9 +1031,9 @@
              130              130       30     1         user/lib/libuser.a(string.o):(.debug_ranges)
              130              130        0     1                 
              130              130        0     1                 $d.5
-               0                0     5da8     8 .symtab
-               0                0     5da8     8         <internal>:(.symtab)
+               0                0     5e98     8 .symtab
+               0                0     5e98     8         <internal>:(.symtab)
                0                0       a4     1 .shstrtab
                0                0       a4     1         <internal>:(.shstrtab)
-               0                0      21e     1 .strtab
-               0                0      21e     1         <internal>:(.strtab)
+               0                0      22b     1 .strtab
+               0                0      22b     1         <internal>:(.strtab)

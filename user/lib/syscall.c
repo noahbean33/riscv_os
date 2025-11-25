@@ -31,6 +31,7 @@ int fork(void) {
     return syscall(SYS_FORK, 0, 0, 0);
 }
 
+
 int exec(const char *program_name) {
     return syscall(SYS_EXEC, (intptr_t)program_name, 0, 0);
 }
@@ -42,4 +43,8 @@ void exit(int status) {
 
 int wait(int *wstatus) {
     return syscall(SYS_WAIT, (uintptr_t)wstatus, 0, 0);
+}
+
+int tarfs_exists(const char* filename) {
+    return syscall(SYS_TARFS_EXISTS, (uint64_t)filename, 0, 0);
 }

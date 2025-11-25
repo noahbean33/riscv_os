@@ -23,6 +23,7 @@
 #include "virtio-emerg.h"
 #include "debug.h"
 
+
 extern struct process *current_proc; // Currently running process
 extern int process_count;
 extern pagetable_t kernel_pagetable;
@@ -60,6 +61,7 @@ long sys_sbrk(long increment) {
     p->heap_end = new_heap;
     return old_heap;
 }
+
 
 ssize_t sys_read(int fd, char *buf, size_t len) {
     enable_sum();
@@ -250,6 +252,7 @@ void sys_exit(int code) {
 
     // Give control back to scheduler
     yield();  // YIELD only to be used without timer, for debugging purposes !!!!
+    
 }
 
 int sys_wait(int *status, int debug_flag) {
@@ -340,6 +343,15 @@ void handle_syscall(struct trap_frame *f) {
         case SYS_SBRK :
             f->regs.a0 = sys_sbrk(f->regs.a0);
             break;
+
+        case SYS_TARFS_EXISTS: {
+            const char* filename = (const char*)f->regs.a0;
+            enable_sum();
+            void* file = tarfs_lookup(filename, NULL, 0);
+            disable_sum();
+            f->regs.a0 = (file != NULL) ? 1 : 0;
+            break;
+        }
 
         default:
             PANIC("[syscall] unknown syscall %d\n", f->regs.a7);

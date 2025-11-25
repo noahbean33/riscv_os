@@ -28,6 +28,7 @@
 #define SYS_CLEAR           406
 #define SYS_TARFS_EXISTS    407
 
+
 #define SYS_DUMP_TF         500  // Debug syscalls, outside POSIX
 #define SYS_LOG             501
 
@@ -43,3 +44,4 @@ int fork(void);
 int exec(const char *program_name);
 void exit(int status);
 int wait(int *wstatus);
+int tarfs_exists(const char* filename);
