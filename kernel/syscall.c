@@ -293,6 +293,40 @@ int sys_wait(int *status, int debug_flag) {
     }
 }
 
+void sys_ps(void) {
+    uart_puts("PID\tSTATE\t\tNAME\n");
+    for (int i = 0; i < PROCS_MAX; i++) {
+        proc_t *p = &procs[i];
+        if (p->pid != 0) {
+            uart_printf("%d\t%s\t%s\n", p->pid, proc_state_str(p->state), p->name);
+        }
+    }
+}
+
+void sys_ls(void) {
+    uint8_t *ptr = _binary_initramfs_tar_start;
+
+    uart_puts("Files in tarfs:\n");
+
+    while (ptr < _binary_initramfs_tar_end) {
+        struct tar_header *hdr = (struct tar_header *)ptr;
+
+        if (hdr->name[0] == '\0') break;  // tar-end
+
+        // Show file name
+        uart_printf("  %s\n", hdr->name);
+
+        // Skip file (round to 512-byte blocks)
+        size_t size = 0;
+        for (int i = 0; i < 11; ++i) {
+            size = (size << 3) + (hdr->size[i] - '0');
+        }
+        size_t blocks = (size + TAR_BLOCK_SIZE - 1) / TAR_BLOCK_SIZE;
+        ptr += (1 + blocks) * TAR_BLOCK_SIZE;
+    }
+}
+
+
 void handle_syscall(struct trap_frame *f) {
 
     switch (f->regs.a7) {       // syscall number :  POSIX / System V ABI conventions (RISC-V 64)
@@ -342,6 +376,16 @@ void handle_syscall(struct trap_frame *f) {
 
         case SYS_SBRK :
             f->regs.a0 = sys_sbrk(f->regs.a0);
+            break;
+
+        case SYS_PS:
+            sys_ps();
+            f->regs.a0 = 0;
+            break;
+
+        case SYS_LS:
+            sys_ls();
+            f->regs.a0 = 0;
             break;
 
         case SYS_TARFS_EXISTS: {

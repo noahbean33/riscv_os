@@ -45,3 +45,6 @@ int exec(const char *program_name);
 void exit(int status);
 int wait(int *wstatus);
 int tarfs_exists(const char* filename);
+void ps();
+void ls();
+

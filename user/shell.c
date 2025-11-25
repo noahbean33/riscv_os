@@ -10,15 +10,18 @@ void print_help(void) {
     puts("Available commands:\n");
     puts("  help         Show this overview\n");
     puts("  hello        Shows the hello message\n");
+    puts("  ps           Show list of active processes\n");
+    puts("  ls           Show files in the current directory\n");
     puts("  clear        Clear the screen\n");
 }
 
 int main() {
     char line[MAXLINE];
     char filename[MAXLINE + 8];  // room for ".elf"
+    char *title = "Novix RISC-V 64 OS, (c) NovixManiac, Shell version : 0.0.1\n";
 
     cls();
-    puts("Novix RISC-V 64 OS, (c) NovixManiac, Shell version : 0.0.1\n");
+    puts(title);
 
     while (1) {
         // 1. Show prompt
@@ -75,7 +78,7 @@ int main() {
         // 5a Built-in "clear"
         if (!strcmp(line, "clear")) {
             cls(); 
-            puts("Novix (64-bits), Shell version : 0.0.1\n"); 
+            puts(title); 
             continue;
         }
 
@@ -87,7 +90,12 @@ int main() {
 
         // 5c Not allowed to start
         if (!strcmp(line, "shell")) {
-            printf("[shell] Command '%s' not found\n", line);
+            printf("[shell] Command '%s' Not allowed to execute\n", line);
+            continue;
+        }
+
+        if (!strcmp(line, "idle")) {
+            printf("[shell] Command '%s' Not allowed to execute\n", line);
             continue;
         }
 

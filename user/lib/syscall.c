@@ -48,3 +48,11 @@ int wait(int *wstatus) {
 int tarfs_exists(const char* filename) {
     return syscall(SYS_TARFS_EXISTS, (uint64_t)filename, 0, 0);
 }
+
+void ps() {
+    syscall(SYS_PS, 0, 0, 0);
+}
+
+void ls() {
+    syscall(SYS_LS, 0, 0, 0);
+}
