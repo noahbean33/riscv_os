@@ -275,3 +275,8 @@ paddr_t walkaddr(pagetable_t pagetable, vaddr_t va) {
    // uart_printf("[walkaddr] VA=0x%lx -> PA=0x%lx (pte=0x%lx)\n", va, final, *pte);
     return final;
 }
+
+// number of free pages (e.g. counted from free list)
+uint64_t page_allocator_free_pages() {
+    return g_free_pages;  // of count nodes in free list
+}

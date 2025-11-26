@@ -22,6 +22,7 @@
 #include "common.h"
 #include "virtio-emerg.h"
 #include "debug.h"
+#include "sysinfo.h"
 
 
 extern struct process *current_proc; // Currently running process
@@ -326,6 +327,27 @@ void sys_ls(void) {
     }
 }
 
+uint64_t sys_sysinfo(uint64_t arg0, ...) {
+    struct sysinfo info = {
+        .total_pages = page_allocator_total_pages(),
+        .free_pages = page_allocator_free_pages(),
+    };
+
+    // copy_to_user is your safe userspace copy
+    return copy_to_user(current_proc->page_table, (void *)arg0, &info, sizeof(info));
+}
+
+int64_t sys_time(uint64_t arg0, ...) {
+    struct DateTime dt;
+
+    // Get current time in ticks
+    uint64_t ticks = get_time();
+    //uart_printf("[sys_time] ticks = %lu\n", ticks);    //debug
+    compute_datetime(ticks, &dt);
+
+    // copy_to_user is your safe userspace copy
+    return copy_to_user(current_proc->page_table, (void *)arg0, &dt, sizeof(dt));
+}
 
 void handle_syscall(struct trap_frame *f) {
 
@@ -369,7 +391,15 @@ void handle_syscall(struct trap_frame *f) {
             f->regs.a0 = 0;
             break;
 
-         case SYS_PUTCHAR: 
+        case SYS_SYSINFO:
+            f->regs.a0 = sys_sysinfo((uint64_t)f->regs.a0);
+            break;
+
+         case SYS_GET_TIME:
+            f->regs.a0 = sys_time((uint64_t)f->regs.a0);
+            break;
+
+        case SYS_PUTCHAR: 
             uart_putc(f->regs.a0);
             f->regs.a0 = 0;
             break;

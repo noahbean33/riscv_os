@@ -9,9 +9,11 @@
 void print_help(void) {
     puts("Available commands:\n");
     puts("  help         Show this overview\n");
-    puts("  hello        Shows the hello message\n");
+    puts("  hello        Show the hello message\n");
     puts("  ps           Show list of active processes\n");
     puts("  ls           Show files in the current directory\n");
+    puts("  mem          Show memory usage / available memory\n");
+    puts("  date         Show the current date and time\n");
     puts("  clear        Clear the screen\n");
 }
 

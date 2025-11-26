@@ -100,3 +100,5 @@ void free_page(paddr_t pa);
 void free_pages_range(paddr_t pa, size_t npages);
 void free_pagetable(pagetable_t pt, int lvl);
 void debug_pagetable(const char *who);
+
+uint64_t page_allocator_free_pages();
