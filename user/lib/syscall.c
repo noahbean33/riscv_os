@@ -32,9 +32,10 @@ int fork(void) {
 }
 
 
-int exec(const char *program_name) {
-    return syscall(SYS_EXEC, (intptr_t)program_name, 0, 0);
+int exec(const char *program_name, char** argv, int argc) {
+    return syscall(SYS_EXEC, (intptr_t)program_name, (intptr_t)argv, (intptr_t)argc);
 }
+
 
 void exit(int status) {
     syscall(SYS_EXIT, status, 0, 0);

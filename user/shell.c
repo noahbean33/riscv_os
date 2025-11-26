@@ -14,6 +14,7 @@ void print_help(void) {
     puts("  ls           Show files in the current directory\n");
     puts("  mem          Show memory usage / available memory\n");
     puts("  date         Show the current date and time\n");
+    puts("  echo [args]  Show the specified text\n");
     puts("  clear        Clear the screen\n");
 }
 
@@ -113,7 +114,7 @@ int main() {
         // 7. Fork / exec / wait / exit
         int pid = fork();
         if (pid == 0) {
-            exec(filename);
+            exec(filename, argv, argc);
             puts("[shell] exec failed\n");
             exit(1);
         } else if (pid > 0) {

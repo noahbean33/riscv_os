@@ -23,6 +23,7 @@
 #include "virtio-emerg.h"
 #include "debug.h"
 #include "sysinfo.h"
+#include "arguments.h"
 
 
 extern struct process *current_proc; // Currently running process
@@ -183,7 +184,7 @@ int sys_fork(int debug_flag) {
     return child->pid;
 }
 
-int sys_exec(const char *progname) {
+int sys_exec(const char *progname, char** argv, int argc) {
     char progname_buf[PROC_NAME_MAX_LEN];
     size_t fs;
 
@@ -196,6 +197,20 @@ int sys_exec(const char *progname) {
     if (!elf_data) {
         uart_printf("[sys_exec] %s not found!\n", progname);
         return -1;
+    }
+
+    // 2. Store arguments in fixed buffer
+    char (*argv_buf)[MAX_ARG_LENGTH] = (char (*)[MAX_ARG_LENGTH])alloc_pages(1);
+    if (!argv_buf) {
+        uart_puts("FATAL: failed to allocate argv_buf\n");
+        return -1;
+    }
+
+    if (argc > 1) {
+        for (int i = 0; i < argc; ++i) {
+            strncpy(argv_buf[i], argv[i], MAX_ARG_LENGTH - 1);
+            argv_buf[i][MAX_ARG_LENGTH - 1] = '\0';
+        }
     }
 
     disable_sum();          // Disable SUM
@@ -217,8 +232,19 @@ int sys_exec(const char *progname) {
     set_active_pagetable((uintptr_t)ep->page_table);
     WRITE_CSR(sscratch, (uint64_t)(ep->tf_stack + sizeof(ep->tf_stack)));
 
-    // 8a. setup sp
+    // 8a. setup sp and arguments
     uint64_t sp = g_user_stack_top;
+    char **argv_ptr = NULL;
+
+    if (argc > 1) {
+        LOG_USER_DBG("[sys_exec] << START ARGV ARGC >>");
+        argv_ptr = setup_user_arguments(argv_buf, argc, &sp);
+        // 👇 Debug line to inspect the user stack
+        //debug_argv_userstack(argc, argv_ptr);
+    }
+
+    // ✅ 8b. Argument buffer is niet meer nodig
+    free_page((paddr_t)argv_buf);
 
     LOG_USER_INFO("[sys_exec] Init trapframe start.");
     
@@ -228,12 +254,16 @@ int sys_exec(const char *progname) {
     tf->epc      = USER_BASE;               // epc
     tf->regs.ra  = (uint64_t)user_return;   // ra
     tf->sp = sp;                            // sp
+
+     // 9b. Setup argc and argv
+    proc->argc = argc;                      // argc
+    proc->argv_ptr = (uint64_t)argv_ptr;    // argv
    
     // debug
     LOG_USER_DBG("[sys_exec] New EPC: 0x%x, SP: 0x%x", ep->tf->epc, ep->tf->sp);
     LOG_USER_DBG("[sys_exec] CSR stvec   = 0x%x", READ_CSR(stvec));
     LOG_USER_DBG("[sys_exec] CSR sstatus = 0x%x", READ_CSR(sstatus));
-    
+    LOG_USER_DBG("[sys_exec] argv_buf pa = 0x%x", (uint64_t)argv_buf);
     debug_pagetable("sys_exec");
     dump_pcb(current_proc);
     LOG_USER_INFO("[sys_exec] ready...");
@@ -372,8 +402,13 @@ void handle_syscall(struct trap_frame *f) {
 
          case SYS_EXEC:
             enable_sum();
+
             const char* filename = (const char*)f->regs.a0;
-            f->regs.a0 = sys_exec(filename);
+            char** argv = (char**)f->regs.a1;
+            int argc = f->regs.a2;
+
+            f->regs.a0 = sys_exec(filename, argv, argc);
+
             disable_sum();
             break;
 

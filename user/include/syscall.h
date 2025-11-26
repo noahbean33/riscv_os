@@ -41,7 +41,7 @@ int write(int fd, const void *buf, size_t len);
 void cls();
 void yield(void);
 int fork(void);
-int exec(const char *program_name);
+int exec(const char *program_name, char** argv, int argc);
 void exit(int status);
 int wait(int *wstatus);
 int tarfs_exists(const char* filename);
