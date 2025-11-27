@@ -245,8 +245,8 @@ void free_proc(proc_t *proc) {
     }
 
     // tany outstanding allocations for this process
-    free_all_tracked_for_pid(proc->pid, 1);
-    dump_allocs_for_pid(proc->pid, 1);
+    free_all_tracked_for_pid(proc->pid, 0);
+    dump_allocs_for_pid(proc->pid, 0);
 
     // Reset PCB fields (defensive)
     proc->state = PROC_UNUSED;

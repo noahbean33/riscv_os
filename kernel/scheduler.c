@@ -12,6 +12,8 @@ extern struct process procs[];          // Process Array
 extern int process_count;
 int g_startup = 1;                      // startup flag
 
+/*
+// Note : Only using for KERNEL >> SHELL
 void yield(void) {
     LOG_USER_INFO("[yield] <<<<< YIELD >>>>>");
 
@@ -90,3 +92,78 @@ void yield(void) {
         user_return();
     }
 }
+*/
+
+// Note : use this version only with servers
+void yield(void) {
+    LOG_USER_INFO("[yield] <<<<< YIELD >>>>>");
+
+    struct process *prev = current_proc;
+    struct process *next = NULL;
+
+    static int last_id = 1;
+
+    // Zoek volgende runnable proces vanaf last_id t/m proc_counter
+    for (int i = last_id; i <= PROCS_MAX; i++) {
+        // Zoek proces met pid == i
+        struct process *p = &procs[i];
+
+        if (p == NULL || p->pid == 0) continue;
+
+        if (p && p->state == PROC_RUNNABLE) {
+            next = p;
+            last_id = i + 1;
+            if (last_id == process_count) last_id = 1;
+            break;
+        }
+    }
+
+    LOG_USER_INFO("[yield] last_id = %d", last_id);
+    print_process_table();
+
+    if (next == NULL) {
+        next = idle_proc;
+        uart_puts("[yield] NULL PROCESS << IDLE STARTED >>\n");
+    }
+
+    if (next == current_proc)
+        return;
+
+    if (prev->state == PROC_RUNNING) {
+        prev->state = PROC_RUNNABLE;
+    }
+
+    if (next->state == PROC_RUNNABLE) {
+        next->state = PROC_RUNNING;
+    }
+
+    // Switch address space
+    __asm__ __volatile__(
+        "sfence.vma\n"
+        "csrw satp, %[satp]\n"
+        "sfence.vma\n"
+        "csrw sscratch, %[sscratch]\n"
+        :
+        : [satp] "r" (SATP_SV39 | ((uint64_t) next->page_table / PAGE_SIZE)),
+          [sscratch] "r" ((uint64_t) &next->tf_stack[sizeof(next->tf_stack)])
+    );
+
+    current_proc = next;
+
+    LOG_USER_DBG("[scheduler] switching to pid=%d tf@0x%x sp=0x%x epc=0x%x",
+                next->pid, (uint64_t)next->tf, next->tf->sp, next->tf->epc);
+
+    if (g_startup) {
+        g_startup = 0;
+        LOG_USER_INFO("[scheduler] <<< SWITCH CONTEXT SP >>>");
+        dump_trap_frame(next->tf);
+        switch_context_sp(&prev->sp, &next->sp);
+    } else {
+        LOG_USER_INFO("[scheduler] <<< USER RETURN >>>");
+        dump_trap_frame(current_proc->tf);
+        print_process_table();
+        user_return();
+    }
+}
+
+

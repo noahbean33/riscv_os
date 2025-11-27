@@ -105,6 +105,11 @@ int main() {
             continue;
         }
 
+        if (!strcmp(line, "init")) {
+            printf("[shell] Command '%s' Not allowed to execute\n", line);
+            continue;
+        }
+
         // 6. Add ".elf"
         strcpy(filename, cmd);  // cmd == argv[0]
         strcat(filename, ".elf");

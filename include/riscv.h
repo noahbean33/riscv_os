@@ -10,3 +10,6 @@
 
 void disable_interrupts(void);
 void enable_interrupts(void);
+
+void enable_supervisor_timer_interrupts(void);
+void disable_supervisor_timer_interrupts(void);

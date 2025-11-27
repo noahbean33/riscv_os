@@ -7,6 +7,10 @@
 #include "syscall.h"
 #include "types.h"
 #include "alloc-tracker.h"
+#include "time.h"
+#include "timer.h"
+#include "sbi.h"
+#include "scheduler.h"
 
 extern struct process *current_proc;    // Currently running process
 
@@ -24,8 +28,20 @@ void trap_handler(trap_frame_t *f)
     // Get the sp+epc saved on the stack by trap_vector ---
     memcpy(current_proc->tf, f, sizeof(trap_frame_t));
 
+    // Handle timer interrupt
+    if ((scause & 0x8000000000000000UL) && (scause & 0xFF) == 5) {
+       
+       // Set timer for next interrupt (in kernel pagetable)
+        uintptr_t old_satp = switch_pagetable((uintptr_t)kernel_pagetable);
+        sbi_set_timer(get_time() + TIMER_INTERVAL);
+        restore_pagetable(old_satp);
 
-    // Syscall afhandelen
+        yield();
+       
+        return;
+    }
+
+    // Syscall handling
     if (scause == SCAUSE_ECALL) {
         handle_syscall(f);
         // Note : after a syscall we jump 4 bytes further
@@ -37,7 +53,7 @@ void trap_handler(trap_frame_t *f)
     LOG_USER_INFO("[trap_handler] ");
     dump_trap_frame(f);
     print_process_table();
-    dump_allocs();
+    //dump_allocs();
 
     uart_printf("[trap_handler] Unexpected trap: scause=%ld, stval=0x%x, sepc=0x%x\n",
                 scause, stval, f->epc);

@@ -44,6 +44,11 @@ $CC $CFLAGS -c user/ls.c -o user/bin/ls.o
 $CC $CFLAGS -c user/mem.c -o user/bin/mem.o
 $CC $CFLAGS -c user/date.c -o user/bin/date.o
 $CC $CFLAGS -c user/echo.c -o user/bin/echo.o
+$CC $CFLAGS -c user/testa.c -o user/bin/testa.o
+$CC $CFLAGS -c user/testb.c -o user/bin/testb.o
+
+# === Compile servers ===
+$CC $CFLAGS -Iservers/init/include -c servers/init/init.c -o user/bin/init.o
 
 # === Build static userlib ===
 echo "Build static userlib ..."
@@ -57,7 +62,10 @@ $CC $CFLAGS $LDFLAGS -Wl,-Map=user/idle.map -o user/idle.elf \
 $CC $CFLAGS $LDFLAGS -Wl,-Map=user/shell.map -o user/shell.elf \
      user/bin/init_crt0.o user/bin/shell.o user/lib/libuser.a
 
-for prog in hello ps ls mem date echo; do
+$CC $CFLAGS $LDFLAGS -Wl,-Map=user/init.map -o user/init.elf \
+  user/bin/init_crt0.o user/bin/init.o user/lib/libuser.a
+
+for prog in hello ps ls mem date echo testa testb; do
   $CC $CFLAGS $LDFLAGS -Wl,-Map=user/${prog}.map -o user/${prog}.elf \
     user/bin/crt0.o user/bin/${prog}.o user/lib/libuser.a
 done
@@ -65,7 +73,7 @@ done
 # === Create tarball for initramfs ===
 echo "=== Create tarball for initramfs ==="
 (cd user && tar cf "../$INITRAMFS_DIR/initramfs.tar" \
-  idle.elf shell.elf hello.elf ps.elf ls.elf mem.elf date.elf echo.elf)
+  idle.elf shell.elf hello.elf ps.elf ls.elf mem.elf date.elf echo.elf init.elf testa.elf testb.elf)
 
 $OBJCOPY -I binary -O elf64-littleriscv --rename-section .data=.initramfs_payload \
   "$INITRAMFS_DIR/initramfs.tar" "$INITRAMFS_DIR/initramfs.o"
@@ -102,6 +110,7 @@ $CC $CFLAGS -Wl,-Tkernel.ld -Wl,-Map=bin/kernel.map -o bin/kernel.elf \
     kernel/arguments.c \
     kernel/alloc-tracker.c \
     kernel/riscv.c \
+    kernel/timer.c \
     "$INITRAMFS_DIR/initramfs.o"
 
 # === Start socket communicatie ===

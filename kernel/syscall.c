@@ -280,10 +280,6 @@ void sys_exit(int code) {
 
     proc->state = PROC_ZOMBIE;
     proc->exit_code = code;
-
-    // Give control back to scheduler
-    yield();  // YIELD only to be used without timer, for debugging purposes !!!!
-    
 }
 
 int sys_wait(int *status, int debug_flag) {
@@ -403,6 +399,7 @@ long sys_log(const char *msg) {
 
     return 0;
 }
+
 
 void handle_syscall(struct trap_frame *f) {
 
