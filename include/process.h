@@ -34,7 +34,15 @@ extern uintptr_t g_user_heap_end;       // Note : comes from user.ld
 
 extern pagetable_t kernel_pagetable;    // Note : comes from kernel.c
 
+#define MAX_MSG_SIZE 256
 #define PROC_NAME_MAX_LEN 64  
+
+typedef struct ipc_message {
+    char data[MAX_MSG_SIZE];
+    size_t size;                // size of the message
+    pid_t sender;               // sender of the message
+    int pending;                // 1 = true = message available
+} ipc_message_t;
 
 // Process Control Block (PCB)
 typedef struct process {
@@ -52,7 +60,8 @@ typedef struct process {
     trap_frame_t *tf;               // Pointer naar kernel trapframe stack
     uint8_t tf_stack[8192];         // Trapframe raw stack‑ruimte…
     paddr_t image_pa;               // Elf image pa
-    size_t  image_npages;           // Elf num of pages    
+    size_t  image_npages;           // Elf num of pages
+    ipc_message_t inbox;            // IPC messages
     char name[PROC_NAME_MAX_LEN];   // Process name
     int argc;                       // Argumenten count
     uint64_t argv_ptr;              // Pointer naar argv

@@ -7,8 +7,8 @@
 #define PROC_NAME_MAX_LEN 64  
 
 const char *servers[MAX_SERVERS] = {
-    "testa.elf",
-    "testb.elf",
+    "window_server.elf",
+    "test_shell.elf",
     NULL
 };
 

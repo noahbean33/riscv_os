@@ -25,7 +25,7 @@ rm -f "$KERNEL_OUT_DIR"/kernel.elf "$KERNEL_OUT_DIR"/kernel.map
 
 # === Build userland ===
 echo "Compile shared userlib sources ..."
-for src in common.c log.c malloc.c printf.c sbrk.c string.c syscall.c; do
+for src in common.c ipc.c log.c malloc.c printf.c sbrk.c string.c syscall.c; do
   $CC $CFLAGS -c user/lib/$src -o user/bin/${src%.c}.o
 done
 
@@ -46,13 +46,15 @@ $CC $CFLAGS -c user/date.c -o user/bin/date.o
 $CC $CFLAGS -c user/echo.c -o user/bin/echo.o
 $CC $CFLAGS -c user/testa.c -o user/bin/testa.o
 $CC $CFLAGS -c user/testb.c -o user/bin/testb.o
+$CC $CFLAGS -c user/test_shell.c -o user/bin/test_shell.o
 
 # === Compile servers ===
 $CC $CFLAGS -Iservers/init/include -c servers/init/init.c -o user/bin/init.o
+$CC $CFLAGS -Iservers/windows/include -c servers/windows/window_server.c -o user/bin/window_server.o
 
 # === Build static userlib ===
 echo "Build static userlib ..."
-$AR rcs user/lib/libuser.a user/bin/common.o user/bin/log.o user/bin/malloc.o user/bin/printf.o user/bin/sbrk.o user/bin/string.o user/bin/syscall.o
+$AR rcs user/lib/libuser.a user/bin/common.o user/bin/ipc.o user/bin/log.o user/bin/malloc.o user/bin/printf.o user/bin/sbrk.o user/bin/string.o user/bin/syscall.o
 
 # === Link user programs ===
 echo "Link user programs ..."
@@ -65,7 +67,7 @@ $CC $CFLAGS $LDFLAGS -Wl,-Map=user/shell.map -o user/shell.elf \
 $CC $CFLAGS $LDFLAGS -Wl,-Map=user/init.map -o user/init.elf \
   user/bin/init_crt0.o user/bin/init.o user/lib/libuser.a
 
-for prog in hello ps ls mem date echo testa testb; do
+for prog in window_server test_shell hello ps ls mem date echo testa testb; do
   $CC $CFLAGS $LDFLAGS -Wl,-Map=user/${prog}.map -o user/${prog}.elf \
     user/bin/crt0.o user/bin/${prog}.o user/lib/libuser.a
 done
@@ -73,7 +75,7 @@ done
 # === Create tarball for initramfs ===
 echo "=== Create tarball for initramfs ==="
 (cd user && tar cf "../$INITRAMFS_DIR/initramfs.tar" \
-  idle.elf shell.elf hello.elf ps.elf ls.elf mem.elf date.elf echo.elf init.elf testa.elf testb.elf)
+  idle.elf shell.elf test_shell.elf window_server.elf hello.elf ps.elf ls.elf mem.elf date.elf echo.elf init.elf testa.elf testb.elf)
 
 $OBJCOPY -I binary -O elf64-littleriscv --rename-section .data=.initramfs_payload \
   "$INITRAMFS_DIR/initramfs.tar" "$INITRAMFS_DIR/initramfs.o"

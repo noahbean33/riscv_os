@@ -400,6 +400,89 @@ long sys_log(const char *msg) {
     return 0;
 }
 
+int sys_ipc_send(pid_t dest_pid, const void *buf, size_t size) {
+    LOG_USER_INFO("[sys_ipc_send] called: dest_pid=%d, size=%u", dest_pid, (unsigned)size);
+    LOG_USER_DBG("[sys_ipc_send] buf ptr = %p (size = %u)", buf, size);
+   
+    if (dest_pid < 0 || dest_pid >= PROCS_MAX) {
+        LOG_USER_ERR("[sys_ipc_send] invalid dest pid: %d", dest_pid);
+        return -1;
+    }
+
+    proc_t *dest = get_proc_by_pid(dest_pid);
+    if (!dest) {
+        PANIC("[sys_ipc_send] Error with dest_pid %d", dest_pid);
+    }
+
+    LOG_USER_DBG("[sys_ipc_send] pid=%d → &procs[pid]=%p", dest_pid, &procs[dest_pid]);
+    LOG_USER_DBG("[sys_ipc_send] dest proc_t @ %p", dest);
+
+
+    if (size > MAX_MSG_SIZE) {
+        LOG_USER_ERR("[sys_ipc_send] message too large: %u (max=%u)", (unsigned)size, MAX_MSG_SIZE);
+        return -2;
+    }
+
+    if (dest->inbox.pending) {
+        LOG_USER_ERR("[sys_ipc_send] destination inbox full (pid=%d)", dest_pid);
+        return -2;
+    }
+
+    LOG_USER_INFO("[sys_ipc_send] copying message to inbox of pid=%d", dest_pid);
+
+    enable_sum();
+    memcpy(dest->inbox.data, buf, size);
+    disable_sum();
+
+    // DEBUG
+    size_t preview_len = size < 31 ? size : 31;
+    char inbox_buf_preview[32] = {0};
+    memcpy(inbox_buf_preview, dest->inbox.data, preview_len);
+    LOG_USER_INFO("[sys_ipc_send] inbox content after copy: '%s'", inbox_buf_preview);
+    // END DEBUG
+
+    dest->inbox.size = size;
+    dest->inbox.sender = current_proc->pid;
+    dest->inbox.pending = 1;
+
+    LOG_USER_INFO("[sys_ipc_send] message delivered: sender=%d -> dest=%d", current_proc->pid, dest_pid);
+
+    return 0;
+}
+
+int sys_ipc_recv(void *buf, size_t max_size, pid_t *sender_pid) {
+    LOG_USER_INFO("[sys_ipc_recv] started...");
+    //LOG_USER_DBG("[sys_ipc_recv] proc_t @ %p, inbox.pending = %d", current_proc, current_proc->inbox.pending);
+
+    ipc_message_t *msg = &current_proc->inbox;
+
+    LOG_USER_DBG("[sys_ipc_recv] msg = %s", msg);
+    LOG_USER_DBG("[sys_ipc_recv] pending = %d, sender_pid = %x", msg->pending, sender_pid);
+
+    if (msg->pending == 0) return -1;
+
+    LOG_USER_DBG("[sys_ipc_recv] start copy_to_user");
+
+    size_t copy_size = msg->size > max_size ? max_size : msg->size;
+
+
+
+    LOG_USER_DBG("[sys_ipc_recv] <<< copy_size = %d >>>", copy_size);
+
+    enable_sum();
+    memcpy(buf, msg->data, copy_size);
+    if (sender_pid) *sender_pid = msg->sender;
+    disable_sum();
+
+    msg->pending = 0 ; //false
+
+    LOG_USER_INFO("[sys_ipc_recv] ended copy_size = %d", copy_size);
+
+    if (copy_size == 1) return -1;
+    return copy_size;
+}
+
+
 
 void handle_syscall(struct trap_frame *f) {
 
@@ -463,6 +546,14 @@ void handle_syscall(struct trap_frame *f) {
 
         case SYS_SBRK :
             f->regs.a0 = sys_sbrk(f->regs.a0);
+            break;
+
+        case SYS_IPC_SEND:
+            f->regs.a0 = sys_ipc_send((pid_t)f->regs.a0, (void *)f->regs.a1, (size_t)f->regs.a2);
+            break;
+
+        case SYS_IPC_RECV:
+            f->regs.a0 = sys_ipc_recv((void *)f->regs.a0, (size_t)f->regs.a1, (pid_t *)f->regs.a2);
             break;
 
         case SYS_PS:

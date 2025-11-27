@@ -1530,31 +1530,31 @@
          1001060          1001060        0     1                 
          1001060          1001060        0     1                 
          1001062          1001062        0     1                 
-         1001068          1001068      238     8 .rodata
-         1001068          1001068       d7     1         <internal>:(.rodata.str1.1)
-         1001140          1001140       b0     8         user/lib/libuser.a(common.o):(.rodata)
-         1001140          1001140        0     1                 .LJTI2_0
-         1001140          1001140        0     1                 $d.1
-         10011f0          10011f0       b0     8         user/lib/libuser.a(printf.o):(.rodata)
-         10011f0          10011f0        0     1                 .LJTI4_0
-         10011f0          10011f0        0     1                 $d.1
-         10012a0          10012a0       20     8 .data
-         10012a0          10012a0       20     8         user/bin/init.o:(.data)
-         10012a0          10012a0        0     1                 $d.2
-         10012a0          10012a0       20     1                 servers
-         10012c0          10012c0       90     8 .bss
-         10012c0          10012c0       80     1         user/bin/init.o:(.bss)
-         10012c0          10012c0       40     1                 main.namebuf
-         10012c0          10012c0        0     1                 $d.3
-         1001300          1001300       40     1                 main.namebuf.6
-         1001340          1001340        4     4         user/bin/init.o:(.sbss)
-         1001340          1001340        4     1                 restart_count
-         1001340          1001340        0     1                 $d.4
-         1001348          1001348        8     8         user/lib/libuser.a(string.o):(.sbss)
-         1001348          1001348        8     1                 strtok.saved
-         1001348          1001348        0     1                 $d.1
-         1001350          1001350        0     1         
-         1001350          1001350     ecb0     1 . = 0x1010000
+         1001068          1001068      248     8 .rodata
+         1001068          1001068       e4     1         <internal>:(.rodata.str1.1)
+         1001150          1001150       b0     8         user/lib/libuser.a(common.o):(.rodata)
+         1001150          1001150        0     1                 .LJTI2_0
+         1001150          1001150        0     1                 $d.1
+         1001200          1001200       b0     8         user/lib/libuser.a(printf.o):(.rodata)
+         1001200          1001200        0     1                 .LJTI4_0
+         1001200          1001200        0     1                 $d.1
+         10012b0          10012b0       20     8 .data
+         10012b0          10012b0       20     8         user/bin/init.o:(.data)
+         10012b0          10012b0        0     1                 $d.2
+         10012b0          10012b0       20     1                 servers
+         10012d0          10012d0       90     8 .bss
+         10012d0          10012d0       80     1         user/bin/init.o:(.bss)
+         10012d0          10012d0       40     1                 main.namebuf
+         10012d0          10012d0        0     1                 $d.3
+         1001310          1001310       40     1                 main.namebuf.6
+         1001350          1001350        4     4         user/bin/init.o:(.sbss)
+         1001350          1001350        4     1                 restart_count
+         1001350          1001350        0     1                 $d.4
+         1001358          1001358        8     8         user/lib/libuser.a(string.o):(.sbss)
+         1001358          1001358        8     1                 strtok.saved
+         1001358          1001358        0     1                 $d.1
+         1001360          1001360        0     1         
+         1001360          1001360     eca0     1 . = 0x1010000
          1010000          1010000    10000     1 .stack
          1010000          1010000        0     1         __user_stack_bottom = .
          1010000          1010000    10000     1         . += 64 * 1024
@@ -1563,22 +1563,22 @@
          1020000          1020000        0     1 __user_heap_start = 0x03000000
          1020000          1020000  2000000     1 . += 32 * 1024 * 1024
          3020000          3020000        0     1 __user_heap_end = .
-               0                0     1fd9     1 .debug_info
+               0                0     1fe5     1 .debug_info
                0                0       96     1         user/bin/init_crt0.o:(.debug_info)
                0                0        0     1                 
                0                0        0     1                 $d.4
-              96               96      554     1         user/bin/init.o:(.debug_info)
+              96               96      560     1         user/bin/init.o:(.debug_info)
               96               96        0     1                 $d.7
-             5ea              5ea      628     1         user/lib/libuser.a(common.o):(.debug_info)
-             5ea              5ea        0     1                 $d.5
-             c12              c12      13c     1         user/lib/libuser.a(log.o):(.debug_info)
-             c12              c12        0     1                 $d.3
-             d4e              d4e      79d     1         user/lib/libuser.a(printf.o):(.debug_info)
-             d4e              d4e        0     1                 $d.5
-            14eb             14eb      49c     1         user/lib/libuser.a(string.o):(.debug_info)
-            14eb             14eb        0     1                 $d.4
-            1987             1987      652     1         user/lib/libuser.a(syscall.o):(.debug_info)
-            1987             1987        0     1                 $d.3
+             5f6              5f6      628     1         user/lib/libuser.a(common.o):(.debug_info)
+             5f6              5f6        0     1                 $d.5
+             c1e              c1e      13c     1         user/lib/libuser.a(log.o):(.debug_info)
+             c1e              c1e        0     1                 $d.3
+             d5a              d5a      79d     1         user/lib/libuser.a(printf.o):(.debug_info)
+             d5a              d5a        0     1                 $d.5
+            14f7             14f7      49c     1         user/lib/libuser.a(string.o):(.debug_info)
+            14f7             14f7        0     1                 $d.4
+            1993             1993      652     1         user/lib/libuser.a(syscall.o):(.debug_info)
+            1993             1993        0     1                 $d.3
                0                0      7f0     1 .debug_abbrev
                0                0       21     1         user/bin/init_crt0.o:(.debug_abbrev)
                0                0        0     1                 
