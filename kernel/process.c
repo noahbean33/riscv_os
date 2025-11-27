@@ -7,6 +7,7 @@
 #include "heap.h"
 #include "user.h"
 #include "debug.h"
+#include "alloc-tracker.h"
 
 extern struct process *current_proc;    // Currently running process
 extern int process_count;               // Number of processes
@@ -231,6 +232,7 @@ void free_proc(proc_t *proc) {
         proc->tf = NULL;
     }
 
+    
     if (proc->image_pa) {
         free_pages_range(proc->image_pa, proc->image_npages);
         proc->image_pa = 0;
@@ -241,6 +243,10 @@ void free_proc(proc_t *proc) {
         process_free_userspace(proc);
         proc->page_table = NULL;
     }
+
+    // tany outstanding allocations for this process
+    free_all_tracked_for_pid(proc->pid, 1);
+    dump_allocs_for_pid(proc->pid, 1);
 
     // Reset PCB fields (defensive)
     proc->state = PROC_UNUSED;

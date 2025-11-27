@@ -6,6 +6,7 @@
 #include "string.h"
 #include "syscall.h"
 #include "types.h"
+#include "alloc-tracker.h"
 
 extern struct process *current_proc;    // Currently running process
 
@@ -36,6 +37,7 @@ void trap_handler(trap_frame_t *f)
     LOG_USER_INFO("[trap_handler] ");
     dump_trap_frame(f);
     print_process_table();
+    dump_allocs();
 
     uart_printf("[trap_handler] Unexpected trap: scause=%ld, stval=0x%x, sepc=0x%x\n",
                 scause, stval, f->epc);

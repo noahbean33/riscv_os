@@ -8,6 +8,7 @@
 #include "riscv.h"
 #include "virtio-mmio.h"
 #include "debug.h"
+#include "alloc-tracker.h"
 
 extern pagetable_t kernel_pagetable;
 extern struct process *current_proc;   // Currently running process
@@ -57,7 +58,7 @@ paddr_t alloc_pages(uint64_t n) {
         pa = alloc_free_list();
         if (pa != 0) {
             memset((void*)pa, 0, PAGE_SIZE);
-
+             track_alloc(pa, 1, current_proc ? current_proc->pid : 0, "alloc_pages");
           //  uart_printf("[ALLOC] page at 0x%x (%d page(s))\n", (uint64_t)pa, n);
             return pa;
         }
@@ -67,6 +68,7 @@ paddr_t alloc_pages(uint64_t n) {
         if (next_paddr > (paddr_t)__free_ram_end)
             PANIC("out of memory");
         memset((void*)pa, 0, PAGE_SIZE);
+        track_alloc(pa, 1, current_proc ? current_proc->pid : 0, "alloc_pages");
 
        // uart_printf("[ALLOC] page at 0x%x (%d page(s))\n", (uint64_t)pa, n);
         return pa;
@@ -79,7 +81,7 @@ paddr_t alloc_pages(uint64_t n) {
         }
         memset((void*)pa, 0, n * PAGE_SIZE);
         next_paddr = new_next;
-       
+        track_alloc(pa, 1, current_proc ? current_proc->pid : 0, "alloc_pages");
        // uart_printf("[ALLOC] page at 0x%x (%d page(s))\n", (uint64_t)pa, n);
         return pa;
     }
@@ -88,13 +90,15 @@ paddr_t alloc_pages(uint64_t n) {
 // Add a physical page to the free list
 void free_page(paddr_t pa) {
     // uart_printf("[FREE ] page at 0x%x\n", pa);
+    track_free(pa, 1);
     *(paddr_t *)pa = free_list;
     free_list = pa;
-    g_free_pages++;  // ✅ bijhouden
+    g_free_pages++;  // ✅ to keep up with
 }
 
 void free_pages_range(paddr_t pa, size_t npages) {
     for (size_t i = 0; i < npages; i++) {
+        track_free(pa, 1);
         free_page(pa + i * PAGE_SIZE);
     }
 }
@@ -147,7 +151,7 @@ void unmap_page(pagetable_t root_table, vaddr_t va) {
     if (!(pt[vpn1] & PTE_V)) return;
     pt = (pagetable_t)((pt[vpn1] >> 10) << 12);
 
-    pt[vpn0] = 0; // verwijder PTE
+    pt[vpn0] = 0; // remove PTE
 
     sfence_vma(); // update TLB
 }
@@ -194,10 +198,10 @@ void free_pagetable(pagetable_t pt, int lvl) {
                 // debug:
                 // uart_printf("[FREE ] leaf page at 0x%x\n", child_pa);
             } else {
-                // kernel-leaf: laat staan (niet vrijgeven)
+                // kernel-leaf: let alone (not release)
             }
         } else {
-            // sub-pagetable (pointer naar volgende level)
+            // sub-pagetable (pointer to next level)
             pagetable_t next = (pagetable_t)PA2KA(child_pa);
             free_pagetable(next, lvl - 1);
 

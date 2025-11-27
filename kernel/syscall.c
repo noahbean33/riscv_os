@@ -379,6 +379,31 @@ int64_t sys_time(uint64_t arg0, ...) {
     return copy_to_user(current_proc->page_table, (void *)arg0, &dt, sizeof(dt));
 }
 
+long sys_log(const char *msg) {
+    if (!msg) return -1;
+
+    enable_sum();
+
+    char buf[256];
+    strncpy(buf, msg, sizeof(buf) - 1);
+    buf[sizeof(buf) - 1] = '\0';
+
+    disable_sum();
+
+    struct process *p = current_proc;
+    const char *label = p->name;
+
+    // Temporarily switch to kernel pagetable
+    uintptr_t old_satp = switch_pagetable((uintptr_t)kernel_pagetable);
+
+    virtio_emerg_log_ext("USER", p->pid, "INFO", label, "%s", buf);
+
+    // Restore original (user) page table
+    restore_pagetable(old_satp);
+
+    return 0;
+}
+
 void handle_syscall(struct trap_frame *f) {
 
     switch (f->regs.a7) {       // syscall number :  POSIX / System V ABI conventions (RISC-V 64)
@@ -459,6 +484,13 @@ void handle_syscall(struct trap_frame *f) {
             void* file = tarfs_lookup(filename, NULL, 0);
             disable_sum();
             f->regs.a0 = (file != NULL) ? 1 : 0;
+            break;
+        }
+
+         case SYS_LOG: {
+            const char *msg = (const char *)f->regs.a0;  // syscall-param
+            long ret = sys_log(msg);                     // call
+            f->regs.a0 = ret;                            // return in a0
             break;
         }
 

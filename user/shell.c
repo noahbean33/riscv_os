@@ -2,6 +2,7 @@
 #include "include/malloc.h"
 #include "include/string.h"
 #include "include/syscall.h"
+#include "include/log.h"
 
 #define MAXLINE 128
 #define MAX_ARGS 8
@@ -22,6 +23,8 @@ int main() {
     char line[MAXLINE];
     char filename[MAXLINE + 8];  // room for ".elf"
     char *title = "Novix RISC-V 64 OS, (c) NovixManiac, Shell version : 0.0.1\n";
+
+    LOG("started...");
 
     cls();
     puts(title);
