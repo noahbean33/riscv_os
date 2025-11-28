@@ -66,7 +66,6 @@ void kernel_main(void) {
     current_proc = idle_proc;
     LOG_INFO("[kernel_main] idle.elf loaded.");
 
-    /*
     // load shell process
     void *shell_file = tarfs_lookup("shell.elf", &fs, 1);
     if (!shell_file) {
@@ -77,8 +76,9 @@ void kernel_main(void) {
     struct process *s = extract_flat_binary_from_elf(shell_file, CREATE_PROCESS);
     strcpy(s->name, "shell");
     LOG_INFO("[kernel_main] shell.elf loaded.");
-*/
 
+
+/*
     // load init process
     void *init_file = tarfs_lookup("init.elf", &fs, 1);
     if (!init_file) {
@@ -89,7 +89,7 @@ void kernel_main(void) {
     struct process *s = extract_flat_binary_from_elf(init_file, CREATE_PROCESS);
     strcpy(s->name, "init");
     LOG_INFO("[kernel_main] init.elf loaded.");
-
+*/
 
     // start scheduler
     LOG_INFO("Start scheduler ...");

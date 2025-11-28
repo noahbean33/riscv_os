@@ -12,7 +12,7 @@ extern struct process procs[];          // Process Array
 extern int process_count;
 int g_startup = 1;                      // startup flag
 
-/*
+
 // Note : Only using for KERNEL >> SHELL
 void yield(void) {
     LOG_USER_INFO("[yield] <<<<< YIELD >>>>>");
@@ -92,8 +92,9 @@ void yield(void) {
         user_return();
     }
 }
-*/
 
+
+/*
 // Note : use this version only with servers
 void yield(void) {
     LOG_USER_INFO("[yield] <<<<< YIELD >>>>>");
@@ -165,5 +166,5 @@ void yield(void) {
         user_return();
     }
 }
-
+*/
 

@@ -1,4 +1,4 @@
-# NOVIX Compilation Guide
+# Compilation Guide
 
 ## Prerequisites
 
@@ -74,37 +74,3 @@ Alternatively, to launch NOVIX using Bochs, run:
 > ```bash
 > chmod +x run.sh runbochs
 > ```
-
----
-
-## debugging
-
-we use QEMU with the GDB remote stub.
-
-**Running the Kernel in QEMU with GDB:**
-
-1. Start QEMU in debug mode:
-```bash
-qemu-system-i386 -s -S -debugcon stdio -m 64M -fda build/main.img
-```
-
-2. Start GDB (in a another terminal):
-```bash
-gdb build/kernel.elf
-```
-
-3. Connect to QEMU:
-```bash
-(gdb) target remote localhost:1234
-```
-
-4. Set breakpoints (for example at start or any function you want to inspect):
-```bash
-(gdb) break start
-(gdb) continue
-```
-
-
-
----
-
